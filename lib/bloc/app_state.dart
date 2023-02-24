@@ -1,20 +1,24 @@
 import 'package:flutter/foundation.dart' show immutable;
-import 'package:geolocator/geolocator.dart' show Position;
+
+import '../model/order.dart';
 
 @immutable
 class AppState {
-  final List<Position> positions;
+  final Order? currentOrder;
+  final List<Order> allOrders;
   final bool serviceIsRunning;
   final LocationPermissionState? permissionState;
 
   const AppState({
-    required this.positions,
+    required this.currentOrder,
+    required this.allOrders,
     required this.serviceIsRunning,
     this.permissionState,
   });
 
-  const AppState.empty()
-      : positions = const [],
+   AppState.empty()
+      : currentOrder = null,
+        allOrders = [],
         serviceIsRunning = false,
         permissionState = null;
 }

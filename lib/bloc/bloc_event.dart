@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart' show immutable;
 import 'package:geolocator/geolocator.dart';
 
+import '../model/order.dart';
+
 @immutable
 abstract class AppEvent {
   const AppEvent();
@@ -30,3 +32,24 @@ class LocationUpdated implements AppEvent {
 
   const LocationUpdated({required this.position});
 }
+
+
+
+@immutable
+class SelectOrder implements AppEvent {
+  final Order order;
+
+  const SelectOrder({required this.order});
+}
+@immutable
+class AddOrder implements AppEvent {
+  final Order order;
+
+  const AddOrder({required this.order});
+}
+
+@immutable
+class InitialState implements AppEvent {
+  const InitialState();
+}
+
