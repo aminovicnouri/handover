@@ -9,16 +9,15 @@ import '../map/map_bloc.dart';
 class MapScreen extends StatelessWidget {
 
 
-  MapScreen({super.key,required this.order});
+  MapScreen({super.key,required this.mapBloc});
 
-  final Order? order;
+  final MapBloc mapBloc;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocProvider(
-        create: (context) => MapBloc(),
-      child: BlocBuilder<MapBloc, MapState>(
+      body: BlocBuilder<MapBloc, MapState>(
+        bloc: mapBloc,
         builder: (context, state) {
           return Column(
             children: [
@@ -27,9 +26,10 @@ class MapScreen extends StatelessWidget {
                 onMapCreated: (controller) {
                   context
                       .read<MapBloc>()
-                      .add(InitControllerEvent(controller: controller, order: order));
+                      .add(InitControllerEvent(controller: controller));
                 },
                 markers: state.markers,
+                circles: state.circles,
                 // onCameraMove: (position) =>
                 //     context.read<AppBloc>().updateMarkers(position.zoom),
                 initialCameraPosition: state.position,
@@ -38,7 +38,6 @@ class MapScreen extends StatelessWidget {
             ],
           );
         },
-      ),
       ),
     );
   }

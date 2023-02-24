@@ -21,6 +21,12 @@ class StopLocationService implements AppEvent {
 class CheckPermissions implements AppEvent {
   const CheckPermissions();
 }
+
+@immutable
+class ChangeOrderStatus implements AppEvent {
+  final OrderStatus status;
+  const ChangeOrderStatus({required this.status});
+}
 @immutable
 class RequestPermissions implements AppEvent {
   const RequestPermissions();
@@ -51,5 +57,10 @@ class AddOrder implements AppEvent {
 @immutable
 class InitialState implements AppEvent {
   const InitialState();
+}
+@immutable
+class ShowBottomSheetEvent implements AppEvent {
+  final bool show;
+  const ShowBottomSheetEvent({required this.show,});
 }
 

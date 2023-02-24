@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:handover/model/order.dart';
 import 'package:meta/meta.dart';
@@ -15,14 +16,10 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   MapBloc() : super(MapState.getInitial()) {
     on<InitControllerEvent>((event, emit) {
       initMapController(emit, event.controller);
-      print("hhhhh aw hna ${event.order}");
-      if(event.order != null) {
-        addMarkers(emit, event.order!);
-      }
     });
 
     on<AddMarkersEvent>((event, emit) {
-      if(event.order != null) {
+      if (event.order != null) {
         addMarkers(emit, event.order!);
       }
     });
@@ -40,7 +37,9 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     emit(MapState(
         controller: this.controller,
         position: state.position,
-        markers: state.markers));
+        markers: state.markers,
+        circles: state.circles,
+    ));
     //_initMarkers();
   }
 
@@ -65,7 +64,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     return super.close();
   }
 
-  void addMarkers(Emitter<MapState> emit, Order order) {
+  Future<void> addMarkers(Emitter<MapState> emit, Order order) async {
     Marker origin = Marker(
         markerId: MarkerId(
           "${order.name}_origin",
@@ -74,6 +73,19 @@ class MapBloc extends Bloc<MapEvent, MapState> {
           order.pickupLatitude,
           order.pickupLongitude,
         ));
+    Circle origin_100m = Circle(
+        circleId: const CircleId("origin_100m"),
+        center: origin.position,
+        radius: 100,
+        strokeWidth: 0,
+        fillColor: Colors.blue[600]!.withOpacity(.5));
+    Circle origin_1km = Circle(
+        circleId: const CircleId("origin_1km"),
+        center: origin.position,
+        radius: 1000,
+        strokeWidth: 0,
+        fillColor: Colors.blue[600]!.withOpacity(.3));
+
     Marker destination = Marker(
         markerId: MarkerId(
           "${order.name}_destination",
@@ -82,7 +94,32 @@ class MapBloc extends Bloc<MapEvent, MapState> {
           order.deliveryLatitude,
           order.deliveryLongitude,
         ));
-    print("hhhhhhh select $origin");
-    emit(MapState(controller: state.controller, position: state.position, markers: {origin, destination}));
+
+    Circle destination_100m = Circle(
+        circleId: const CircleId("destination_100m"),
+        center: destination.position,
+        radius: 100,
+        strokeWidth: 0,
+        fillColor: Colors.green[600]!.withOpacity(.5));
+
+    Circle destination_1km = Circle(
+        circleId: const CircleId("destination_1km"),
+        center: destination.position,
+        radius: 1000,
+        strokeWidth: 0,
+        fillColor: Colors.green[600]!.withOpacity(.3));
+    final markers = {origin, destination};
+    final isRunning = GeofenceServiceManager.instance().isRunningService();
+    if(!isRunning) {
+      GeofenceServiceManager.instance().start(markers.toList());
+
+    }
+
+    emit(MapState(
+      controller: state.controller,
+      position: state.position,
+      markers: markers,
+      circles: {origin_100m, origin_1km, destination_100m, destination_1km},
+    ));
   }
 }

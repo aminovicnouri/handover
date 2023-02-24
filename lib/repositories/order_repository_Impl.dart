@@ -8,10 +8,6 @@ class OrderRepositoryImpl extends OrderRepository{
   static Box? status ;
   static bool isInitialised = false;
 
-  OrderRepositoryImpl() {
-    init();
-  }
-
   @override
   Future<void> deleteOrder(Order order) async {
     orders?.delete(order);
@@ -29,8 +25,12 @@ class OrderRepositoryImpl extends OrderRepository{
   @override
   Future<void> init() async{
     if(!isInitialised) {
-      Hive.registerAdapter<Order>(OrderAdapter());
-      Hive.registerAdapter<OrderStatus>(OrderStatusAdapter());
+      if(!Hive.isAdapterRegistered(1)) {
+        Hive.registerAdapter<Order>(OrderAdapter());
+      }
+      if(!Hive.isAdapterRegistered(2)) {
+        Hive.registerAdapter<OrderStatus>(OrderStatusAdapter());
+      }
 
       orders = await Hive.openBox<Order>('orders');
       status = await Hive.openBox<OrderStatus>('status');

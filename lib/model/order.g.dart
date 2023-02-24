@@ -77,8 +77,14 @@ class OrderStatusAdapter extends TypeAdapter<OrderStatus> {
       case 0:
         return OrderStatus.idle;
       case 1:
-        return OrderStatus.running;
+        return OrderStatus.runningForPickUp;
       case 2:
+        return OrderStatus.picked;
+      case 3:
+        return OrderStatus.outForDelivery;
+      case 4:
+        return OrderStatus.nearDestination;
+      case 5:
         return OrderStatus.delivered;
       default:
         return OrderStatus.idle;
@@ -91,11 +97,20 @@ class OrderStatusAdapter extends TypeAdapter<OrderStatus> {
       case OrderStatus.idle:
         writer.writeByte(0);
         break;
-      case OrderStatus.running:
+      case OrderStatus.runningForPickUp:
         writer.writeByte(1);
         break;
-      case OrderStatus.delivered:
+      case OrderStatus.picked:
         writer.writeByte(2);
+        break;
+      case OrderStatus.outForDelivery:
+        writer.writeByte(3);
+        break;
+      case OrderStatus.nearDestination:
+        writer.writeByte(4);
+        break;
+      case OrderStatus.delivered:
+        writer.writeByte(5);
         break;
     }
   }

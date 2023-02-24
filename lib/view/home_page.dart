@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:handover/map/map_bloc.dart';
 
 import '../bloc/app_bloc.dart';
 import '../bloc/app_state.dart';
 import '../bloc/bloc_event.dart';
 import '../repositories/order_repository_Impl.dart';
 import 'map_screen.dart';
-import 'my_bottom_sheet.dart';
+import 'orders_bottom_sheet.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -15,57 +16,46 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return RepositoryProvider(
       create: (_) => OrderRepositoryImpl(),
-      child: BlocProvider(
-        create: (context) => AppBloc(orderRepository: context.read<OrderRepositoryImpl>())..add(const CheckPermissions()),
-
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AppBloc>(
+              create: (context) =>
+                  AppBloc(orderRepository: context.read<OrderRepositoryImpl>())
+                    ..add(const CheckPermissions())
+                    ..add(const InitialState())),
+          BlocProvider<MapBloc>(create: (context) => MapBloc()),
+        ],
         child: Scaffold(
           appBar: AppBar(
             title: const Text('Home Page'),
           ),
-          body: BlocBuilder<AppBloc, AppState>(
+          body: BlocConsumer<AppBloc, AppState>(
+            listener: (BuildContext context, AppState state) {
+              if (state.showBottomSheet && !isBottomSheetVisible(context)) {
+                _showMyBottomSheet(context);
+              }
+              if (state.currentOrder != null &&
+                  context.read<MapBloc>().state.markers.isEmpty) {
+                context
+                    .read<MapBloc>()
+                    .add(AddMarkersEvent(order: state.currentOrder));
+              }
+            },
             builder: (context, appState) {
               switch (appState.permissionState) {
                 case LocationPermissionState.granted:
                   return Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
-                      TextButton(
-                        onPressed: () {
-                          context.read<AppBloc>().add(
-                                !appState.serviceIsRunning
-                                    ? const StartLocationService()
-                                    : const StopLocationService(),
-                              );
-                        },
-                        child: !appState.serviceIsRunning
-                            ? const Text('Start location service')
-                            : const Text('Stop location service'),
-                      ),
-                      Text('selected order: ${appState.currentOrder?.name ?? "null"}'),
+                      Text(
+                          'selected order: ${appState.currentOrder?.name ?? "null"}'),
                       Expanded(
-                        child: MapScreen(order: appState.currentOrder,),
+                        child: MapScreen(mapBloc: context.read<MapBloc>()),
                       ),
                       GestureDetector(
-                          child: Text("hdjkfhkdjfhdkjfhdkjfhdkjfhkjdhfkjdhf"),
+                        child: Text("hdjkfhkdjfhdkjfhdkjfhdkjfhkjdhfkjdhf"),
                         onTap: () {
-                          showModalBottomSheet<void>(
-                              backgroundColor: Colors.transparent,
-                              shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.only(
-                                    topRight: Radius.circular(20),
-                                    topLeft: Radius.circular(20),
-                                  )),
-                              context: context,
-                              builder: (BuildContext buildContext) {
-                                return MyBottomSheet(
-                                  selectOrder: (order) {
-                                    context.read<AppBloc>().add(
-                                      SelectOrder(order: order)
-                                    );
-                                  },
-                                );
-                              }
-                          );
+                          _showMyBottomSheet(context);
                         },
                       )
                     ],
@@ -106,5 +96,29 @@ class HomePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showMyBottomSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+          topRight: Radius.circular(20),
+          topLeft: Radius.circular(20),
+        )),
+        context: context,
+        builder: (BuildContext buildContext) {
+          return OrdersBottomSheet(
+            selectOrder: (order) {
+              context.read<AppBloc>().add(SelectOrder(order: order));
+            },
+          );
+        });
+  }
+
+  bool isBottomSheetVisible(BuildContext context) {
+    final navigator = Navigator.of(context);
+    return navigator.canPop();
   }
 }

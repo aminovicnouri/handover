@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:geofence_service/geofence_service.dart';
+import 'package:handover/notifications/local_notification_service.dart';
+import 'package:handover/repositories/order_repository_Impl.dart';
 import 'package:handover/services/geofence_service_manager.dart';
 import 'package:handover/view/home_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 Future<void> main() async {
   await Hive.initFlutter();
+ // await OrderRepositoryImpl.initDb();
+  LocalNotificationService.initialize();
   runApp(
     MaterialApp(
       title: 'Flutter Demo',

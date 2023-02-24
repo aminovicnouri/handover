@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 
 import 'package:hive/hive.dart';
@@ -31,7 +32,7 @@ class Order extends HiveObject {
   final String address;
 
   @HiveField(3)
-  final OrderStatus status;
+  OrderStatus status;
 
   @HiveField(4)
   final double pickupLatitude;
@@ -51,7 +52,9 @@ class Order extends HiveObject {
   @HiveField(9)
   final double? price;
 
-
+  List<LatLng> getLatLngs() {
+    return [LatLng(pickupLatitude, pickupLongitude), LatLng(deliveryLatitude, deliveryLongitude)];
+  }
 
 }
 
@@ -62,9 +65,18 @@ enum OrderStatus {
   idle("idle"),
 
   @HiveField(1)
-  running("running"),
+  runningForPickUp("Running for pick up"),
 
   @HiveField(2)
+  picked("Picked up delivery"),
+
+  @HiveField(3)
+  outForDelivery("Out for delivery"),
+
+  @HiveField(4)
+  nearDestination("Near delivery destination"),
+
+  @HiveField(5)
   delivered("delivered");
 
   const OrderStatus(this.value);
@@ -76,3 +88,6 @@ enum OrderStatus {
         .firstWhere((element) => element.toString() == 'OrderStatus.$value');
   }
 }
+
+
+

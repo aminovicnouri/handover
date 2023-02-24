@@ -8,9 +8,8 @@ abstract class MapEvent {
 
 class InitControllerEvent implements MapEvent {
   final GoogleMapController controller;
-  final Order? order;
 
-  InitControllerEvent({required this.controller, required this.order});
+  InitControllerEvent({required this.controller});
 }
 
 class AddMarkersEvent implements MapEvent {

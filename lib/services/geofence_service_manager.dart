@@ -1,17 +1,22 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geofence_service/geofence_service.dart';
-
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:handover/notifications/local_notification_service.dart';
 
 class GeofenceServiceManager {
   GeofenceServiceManager._sharedInstance();
 
-  static final GeofenceServiceManager _shared = GeofenceServiceManager._sharedInstance();
+  static final GeofenceServiceManager _shared =
+      GeofenceServiceManager._sharedInstance();
 
   factory GeofenceServiceManager.instance() => _shared;
 
   final _activityStreamController = StreamController<Activity>();
-  final _geofenceStreamController = StreamController<Geofence>();
+
+  final geofenceStreamController = StreamController<Geofence>();
+
   final locationStreamController = StreamController<Location>();
 
   // Create a [GeofenceService] instance and set options.
@@ -25,42 +30,18 @@ class GeofenceServiceManager {
       printDevLog: true,
       geofenceRadiusSortType: GeofenceRadiusSortType.DESC);
 
-
-  // Create a [Geofence] list.
-  final _geofenceList = <Geofence>[
-    Geofence(
-      id: 'place_1',
-      latitude: 25.120078,
-      longitude: 55.198436,
-      radius: [
-        GeofenceRadius(id: 'radius_100m', length: 100),
-        GeofenceRadius(id: 'radius_25m', length: 25),
-        GeofenceRadius(id: 'radius_250m', length: 250),
-        GeofenceRadius(id: 'radius_200m', length: 200),
-      ],
-    ),
-    Geofence(
-      id: 'place_2',
-      latitude: 35.104971,
-      longitude: 129.034851,
-      radius: [
-        GeofenceRadius(id: 'radius_25m', length: 25),
-        GeofenceRadius(id: 'radius_100m', length: 100),
-        GeofenceRadius(id: 'radius_200m', length: 200),
-      ],
-    ),
-  ];
-
   // This function is to be called when the geofence status is changed.
   Future<void> _onGeofenceStatusChanged(
       Geofence geofence,
       GeofenceRadius geofenceRadius,
       GeofenceStatus geofenceStatus,
       Location location) async {
+
+    LocalNotificationService.showNotificationWithPayload(id: 111, title: geofence.id, body: geofence.status.name, payload: "");
     print('geofence: ${geofence.toJson()}');
     print('geofenceRadius: ${geofenceRadius.toJson()}');
     print('geofenceStatus: ${geofenceStatus.toString()}');
-    _geofenceStreamController.sink.add(geofence);
+    geofenceStreamController.sink.add(geofence);
   }
 
   // This function is to be called when the activity has changed.
@@ -93,14 +74,28 @@ class GeofenceServiceManager {
     print('ErrorCode: $errorCode');
   }
 
-  void start() {
+  void start(List<Marker> markers) {
+    final geofenceList = markers
+        .map((e) => Geofence(
+              id: e.markerId.value,
+              latitude: e.position.latitude,
+              longitude: e.position.longitude,
+              radius: [
+                GeofenceRadius(id: '${e.markerId.value}_100m', length: 100),
+                GeofenceRadius(id: '${e.markerId.value}_1000m', length: 1000),
+              ],
+            ))
+        .toList();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _geofenceService.addGeofenceStatusChangeListener(_onGeofenceStatusChanged);
+      _geofenceService
+          .addGeofenceStatusChangeListener(_onGeofenceStatusChanged);
       _geofenceService.addLocationChangeListener(_onLocationChanged);
-      _geofenceService.addLocationServicesStatusChangeListener(_onLocationServicesStatusChanged);
+      _geofenceService.addLocationServicesStatusChangeListener(
+          _onLocationServicesStatusChanged);
       _geofenceService.addActivityChangeListener(_onActivityChanged);
       _geofenceService.addStreamErrorListener(_onError);
-      _geofenceService.start(_geofenceList).catchError(_onError);
+      _geofenceService.start(geofenceList).catchError(_onError);
     });
   }
 
@@ -111,4 +106,5 @@ class GeofenceServiceManager {
   bool isRunningService() {
     return _geofenceService.isRunningService;
   }
+
 }

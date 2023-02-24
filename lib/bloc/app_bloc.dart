@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geofence_service/geofence_service.dart';
 import 'package:handover/bloc/permissions.dart';
 import 'package:handover/model/order.dart';
 import 'package:handover/services/geofence_service_manager.dart';
@@ -10,54 +11,38 @@ import 'app_state.dart';
 import 'bloc_event.dart';
 
 class AppBloc extends Bloc<AppEvent, AppState> {
-  StreamSubscription? _geolocationSubscription;
+  StreamSubscription? _geofenceSubscription;
   final OrderRepository _orderRepository;
 
   AppBloc({required OrderRepository orderRepository})
       : _orderRepository = orderRepository,
         super(AppState.empty()) {
-    on<StartLocationService>((event, emit) async {
-      _geolocationSubscription?.cancel();
-      _listenToLocationChanges();
-      emit(
-        AppState(
-            allOrders: state.allOrders,
-            currentOrder: state.currentOrder,
-            serviceIsRunning: true,
-            permissionState: state.permissionState),
-      );
-    });
-    on<StopLocationService>((event, emit) async {
-      _geolocationSubscription?.cancel();
-      emit(
-        AppState(
-            allOrders: state.allOrders,
-            currentOrder: null,
-            serviceIsRunning: false,
-            permissionState: state.permissionState),
-      );
-    });
-
-    on<LocationUpdated>((event, emit) {});
-
+    _orderRepository.init();
     on<CheckPermissions>((event, emit) async {
       final status = await checkPermissions();
       emit(
         AppState(
-            allOrders: state.allOrders,
-            currentOrder: state.currentOrder,
-            serviceIsRunning: state.serviceIsRunning,
-            permissionState: status),
+          allOrders: state.allOrders,
+          currentOrder: state.currentOrder,
+          serviceIsRunning: state.serviceIsRunning,
+          permissionState: status,
+          showBottomSheet: state.showBottomSheet,
+        ),
       );
     });
 
     on<SelectOrder>((event, emit) async {
+      Order order = event.order;
+      order.status = OrderStatus.runningForPickUp;
+      await _orderRepository.updateOrder(order);
       emit(
         AppState(
-            allOrders: state.allOrders,
-            currentOrder: event.order,
-            serviceIsRunning: state.serviceIsRunning,
-            permissionState: state.permissionState),
+          allOrders: state.allOrders,
+          currentOrder: order,
+          serviceIsRunning: state.serviceIsRunning,
+          permissionState: state.permissionState,
+          showBottomSheet: state.showBottomSheet,
+        ),
       );
     });
 
@@ -66,28 +51,45 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       final list = await _orderRepository.getOrders();
       emit(
         AppState(
-            allOrders: list,
-            currentOrder: state.currentOrder,
-            serviceIsRunning: state.serviceIsRunning,
-            permissionState: state.permissionState
+          allOrders: list,
+          currentOrder: state.currentOrder,
+          serviceIsRunning: state.serviceIsRunning,
+          permissionState: state.permissionState,
+          showBottomSheet: state.showBottomSheet,
         ),
       );
     });
-
     on<InitialState>((event, emit) async {
+      await _orderRepository.init();
       final list = await _orderRepository.getOrders();
-      final order = list.where((element) => element.status == OrderStatus.running).first;
+      final running =
+          list.where((element) => element.status != OrderStatus.idle && element.status != OrderStatus.delivered);
+      final current = running.isEmpty ? null : running.first;
+        emit(
+          AppState(
+            allOrders: list,
+            currentOrder: current,
+            serviceIsRunning: state.serviceIsRunning,
+            permissionState: state.permissionState,
+            showBottomSheet: state.showBottomSheet,
+          ),
+        );
+
+        if(state.currentOrder?.status != OrderStatus.idle){
+          _listenToLocationChanges();
+        }
+    });
+    on<ShowBottomSheetEvent>((event, emit) async {
       emit(
         AppState(
-            allOrders: list,
-            currentOrder: order,
-            serviceIsRunning: state.serviceIsRunning,
-            permissionState: state.permissionState
+          allOrders: state.allOrders,
+          currentOrder: state.currentOrder,
+          serviceIsRunning: state.serviceIsRunning,
+          permissionState: state.permissionState,
+          showBottomSheet: event.show,
         ),
       );
     });
-
-
 
     on<RequestPermissions>((event, emit) async {
       await requestPermissions();
@@ -97,11 +99,30 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
   @override
   Future<void> close() {
-    _geolocationSubscription?.cancel();
+    _geofenceSubscription?.cancel();
     return super.close();
   }
 
   void _listenToLocationChanges() {
-    GeofenceServiceManager.instance().start();
+    print("hhhhhhhhhh listen");
+
+    _geofenceSubscription = GeofenceServiceManager.instance()
+       .geofenceStreamController
+       .stream
+       .listen((geofence) {
+     add(const ShowBottomSheetEvent(show: true));
+     // if(geofence.id.contains("origin") && state.currentOrder!.status == OrderStatus.idle) {
+     //   // if(geofence.radius[0].status == GeofenceStatus.ENTER)
+     // }
+     // if (geofence.radius[0].status == GeofenceStatus.ENTER) {
+     //   add(const ShowBottomSheetEvent(show: true));
+     //   if (state.currentOrder?.status == OrderStatus.idle) {
+     //     add(const ShowBottomSheetEvent(show: true));
+     //     //confirmPickup();
+     //   } else {
+     //     //confirmDelivery();
+     //   }
+     // }
+   });
   }
 }

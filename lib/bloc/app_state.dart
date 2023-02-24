@@ -8,11 +8,13 @@ class AppState {
   final List<Order> allOrders;
   final bool serviceIsRunning;
   final LocationPermissionState? permissionState;
+  final bool showBottomSheet;
 
   const AppState({
     required this.currentOrder,
     required this.allOrders,
     required this.serviceIsRunning,
+    required this.showBottomSheet,
     this.permissionState,
   });
 
@@ -20,6 +22,7 @@ class AppState {
       : currentOrder = null,
         allOrders = [],
         serviceIsRunning = false,
+         showBottomSheet = false,
         permissionState = null;
 }
 

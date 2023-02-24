@@ -3,7 +3,10 @@ part of 'bottom_sheet_bloc.dart';
 @immutable
 abstract class BottomSheetEvent {}
 
-class Initialize extends BottomSheetEvent{}
+class Initialize extends BottomSheetEvent{
+  final Function(Order order) select;
+  Initialize({required this.select});
+}
 class AddOrder extends BottomSheetEvent{
   final Order order;
   AddOrder({required this.order});
