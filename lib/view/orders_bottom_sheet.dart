@@ -8,10 +8,12 @@ class OrdersBottomSheet extends StatelessWidget {
   const OrdersBottomSheet({
     required this.bottomSheetBloc,
     required this.selectOrder,
+    required this.updateOrder,
     Key? key,
   }) : super(key: key);
 
   final Function(Order order) selectOrder;
+  final Function(Order order) updateOrder;
   final BottomSheetBloc bottomSheetBloc;
 
   @override
@@ -24,7 +26,7 @@ class OrdersBottomSheet extends StatelessWidget {
           child: Stack(
             children: [
               Container(
-                alignment:appState is BottomSheetListState
+                alignment: appState is BottomSheetListState
                     ? Alignment.center
                     : Alignment.centerLeft,
                 height: 600,
@@ -119,14 +121,38 @@ class OrdersBottomSheet extends StatelessWidget {
                         ],
                       )
                     : Container(
-                      margin: const EdgeInsets.symmetric(
-                        vertical: 50,
-                        horizontal: 10,
+                        margin: const EdgeInsets.symmetric(
+                          vertical: 50,
+                          horizontal: 10,
+                        ),
+                        child: Stack(
+                          children: [
+                            _Timeline(
+                              order: (appState as BottomSheetOrderSelectedState)
+                                  .currentOrder,
+                            ),
+                            Align(
+                              alignment: Alignment.bottomCenter,
+                              child:   appState.canBePickedOrDelivered
+                                  ? ElevatedButton(
+                                  onPressed: () {
+                                    bottomSheetBloc.add(UpdateOrderEvent(
+                                      order: appState.currentOrder,
+                                      canBePickedOrDelivered: true,
+                                      updateOrder: updateOrder,
+                                    ));
+                                  },
+                                  child: Text(
+                                    appState.currentOrder.status ==
+                                        OrderStatus.runningForPickUp
+                                        ? "Confirm pick up"
+                                        : "Confirm delivery",
+                                  ))
+                                  : const SizedBox(),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: _Timeline(
-                        order: (appState as BottomSheetOrderSelectedState).currentOrder,
-                      ),
-                    ),
               ),
               const Align(
                 alignment: Alignment.topCenter,

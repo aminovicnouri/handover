@@ -27,11 +27,22 @@ class AddOrder extends BottomSheetEvent {
 
 class UpdateOrderEvent extends BottomSheetEvent {
   final Order order;
+  final bool canBePickedOrDelivered;
+  final Function(Order order)? updateOrder;
 
-  const UpdateOrderEvent({required this.order});
+  const UpdateOrderEvent({required this.order, this.canBePickedOrDelivered = false, this.updateOrder,});
 
   @override
   List<Object> get props => [order];
+}
+
+class AskForUpdateEvent extends BottomSheetEvent {
+  final bool canBePickedOrDelivered;
+
+  const AskForUpdateEvent({required this.canBePickedOrDelivered});
+
+  @override
+  List<Object> get props => [canBePickedOrDelivered];
 }
 
 class SelectOrderBottomSheetEvent extends BottomSheetEvent {

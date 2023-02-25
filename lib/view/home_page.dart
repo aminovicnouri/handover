@@ -37,12 +37,13 @@ class HomePage extends StatelessWidget {
           body: BlocConsumer<AppBloc, AppState>(
             listenWhen: (previousState, currentState) {
               previousState.currentOrder?.status !=
-                  currentState.currentOrder?.status;
+                      currentState.currentOrder?.status;
               return true;
             },
             listener: (BuildContext context, AppState state) {
               final mapBloc = context.read<MapBloc>();
               final bottomSheetBloc = context.read<BottomSheetBloc>();
+
               if (state.showBottomSheet && !isBottomSheetVisible(context)) {
                 _showMyBottomSheet(context);
               }
@@ -51,12 +52,16 @@ class HomePage extends StatelessWidget {
               }
 
               if (bottomSheetBloc.state is BottomSheetOrderSelectedState) {
-                if (state.currentOrder?.status !=
-                    (bottomSheetBloc.state as BottomSheetOrderSelectedState)
+                final bottomSheetState = bottomSheetBloc.state as BottomSheetOrderSelectedState;
+                if (state.currentOrder?.status != bottomSheetState
                         .currentOrder
                         .status) {
                   bottomSheetBloc
                       .add(UpdateOrderEvent(order: state.currentOrder!));
+                }
+
+                if(state.canBePickedOrDelivered != bottomSheetState.canBePickedOrDelivered) {
+                  bottomSheetBloc.add(AskForUpdateEvent(canBePickedOrDelivered: state.canBePickedOrDelivered));
                 }
               }
             },
@@ -132,6 +137,9 @@ class HomePage extends StatelessWidget {
             bottomSheetBloc: context.read<BottomSheetBloc>(),
             selectOrder: (order) {
               context.read<AppBloc>().add(SelectOrder(order: order));
+            },
+            updateOrder: (order) {
+              context.read<AppBloc>().add(ChangeOrderStatus(status: order.status));
             },
           );
         });

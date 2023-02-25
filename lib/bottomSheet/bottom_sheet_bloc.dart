@@ -36,15 +36,35 @@ class BottomSheetBloc extends Bloc<BottomSheetEvent, BottomSheetState> {
       final list = await _orderRepository.getOrders();
       emit(BottomSheetListState(allOrders: list));
     });
-    on<UpdateOrderEvent>((event, emit) async {
-      emit(BottomSheetOrderSelectedState(currentOrder: event.order));
-    });
 
+    on<UpdateOrderEvent>((event, emit) async {
+      final order = event.order;
+      if(event.canBePickedOrDelivered) {
+        if ((state as BottomSheetOrderSelectedState).currentOrder.status ==
+            OrderStatus.runningForPickUp) {
+          order.status = OrderStatus.picked;
+        } else {
+          order.status = OrderStatus.delivered;
+        }
+      }
+      emit(BottomSheetOrderSelectedState(currentOrder: order, canBePickedOrDelivered: false));
+      if(event.updateOrder != null) {
+        event.updateOrder!(order);
+      }
+    });
 
     on<SelectOrderBottomSheetEvent>((event, emit) async {
       event.select(event.order);
       emit(BottomSheetOrderSelectedState(
         currentOrder: event.order,
+      ));
+    });
+
+    on<AskForUpdateEvent>((event, emit) async {
+      final currentState = state as BottomSheetOrderSelectedState;
+      emit(BottomSheetOrderSelectedState(
+        currentOrder: currentState.currentOrder,
+        canBePickedOrDelivered: event.canBePickedOrDelivered,
       ));
     });
   }

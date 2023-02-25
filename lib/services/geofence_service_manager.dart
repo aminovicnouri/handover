@@ -37,7 +37,6 @@ class GeofenceServiceManager {
       GeofenceStatus geofenceStatus,
       Location location) async {
 
-    LocalNotificationService.showNotificationWithPayload(id: 111, title: geofence.id, body: geofence.status.name, payload: "");
     print('geofence: ${geofence.toJson()}');
     print('geofenceRadius: ${geofenceRadius.toJson()}');
     print('geofenceStatus: ${geofenceStatus.toString()}');

@@ -6,6 +6,7 @@ import 'package:handover/bloc/permissions.dart';
 import 'package:handover/model/order.dart';
 import 'package:handover/services/geofence_service_manager.dart';
 
+import '../notifications/local_notification_service.dart';
 import '../repositories/order_repository.dart';
 import 'app_state.dart';
 import 'bloc_event.dart';
@@ -27,6 +28,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           serviceIsRunning: state.serviceIsRunning,
           permissionState: status,
           showBottomSheet: state.showBottomSheet,
+          canBePickedOrDelivered: state.canBePickedOrDelivered,
         ),
       );
     });
@@ -44,6 +46,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           serviceIsRunning: state.serviceIsRunning,
           permissionState: state.permissionState,
           showBottomSheet: state.showBottomSheet,
+          canBePickedOrDelivered: state.canBePickedOrDelivered
         ),
       );
     });
@@ -61,6 +64,20 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           serviceIsRunning: state.serviceIsRunning,
           permissionState: state.permissionState,
           showBottomSheet: state.showBottomSheet,
+          canBePickedOrDelivered: false,
+        ),
+      );
+    });
+
+    on<AskForStatusChange>((event, emit) async {
+      emit(
+        AppState(
+          allOrders: state.allOrders,
+          currentOrder: state.currentOrder,
+          serviceIsRunning: state.serviceIsRunning,
+          permissionState: state.permissionState,
+          showBottomSheet: state.showBottomSheet,
+          canBePickedOrDelivered: event.canBePickedOrDelivered,
         ),
       );
     });
@@ -75,6 +92,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           serviceIsRunning: state.serviceIsRunning,
           permissionState: state.permissionState,
           showBottomSheet: state.showBottomSheet,
+          canBePickedOrDelivered: state.canBePickedOrDelivered
         ),
       );
     });
@@ -92,6 +110,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           serviceIsRunning: state.serviceIsRunning,
           permissionState: state.permissionState,
           showBottomSheet: state.showBottomSheet,
+          canBePickedOrDelivered: state.canBePickedOrDelivered
         ),
       );
 
@@ -107,6 +126,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           serviceIsRunning: state.serviceIsRunning,
           permissionState: state.permissionState,
           showBottomSheet: event.show,
+          canBePickedOrDelivered: state.canBePickedOrDelivered
         ),
       );
     });
@@ -124,26 +144,33 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   }
 
   void _listenToLocationChanges() {
-    print("hhhhhhhhhh listen");
-
     _geofenceSubscription = GeofenceServiceManager.instance()
         .geofenceStreamController
         .stream
         .listen((geofence) {
-      add(const ShowBottomSheetEvent(show: true));
+      LocalNotificationService.showNotificationWithPayload(id: 111, title: geofence.id, body: geofence.status.name, payload: "");
 
+      add(const ShowBottomSheetEvent(show: true));
       if (geofence.id.contains("origin")) {
-        if (state.currentOrder?.status == OrderStatus.runningForPickUp && geofence.radius[0].status == GeofenceStatus.ENTER) {
-          add(const ChangeOrderStatus(status: OrderStatus.picked));
+        if (state.currentOrder?.status == OrderStatus.runningForPickUp) {
+          if(geofence.radius[0].status == GeofenceStatus.ENTER) {
+            add(const AskForStatusChange(canBePickedOrDelivered: true));
+          } else  if(geofence.radius[0].status == GeofenceStatus.EXIT) {
+            add(const AskForStatusChange(canBePickedOrDelivered: false));
+          }
         } else if (state.currentOrder?.status == OrderStatus.picked && geofence.radius[0].status == GeofenceStatus.EXIT) {
           add(const ChangeOrderStatus(status: OrderStatus.outForDelivery));
         }
       } else if (geofence.id.contains("destination")) {
         if (state.currentOrder?.status == OrderStatus.nearDestination && geofence.radius[0].status == GeofenceStatus.ENTER) {
-          add(const ChangeOrderStatus(status: OrderStatus.delivered));
+          add(const AskForStatusChange(canBePickedOrDelivered: true));
           _geofenceSubscription?.cancel();
-        } else if (state.currentOrder?.status == OrderStatus.outForDelivery && geofence.radius[1].status == GeofenceStatus.ENTER) {
-          add(const ChangeOrderStatus(status: OrderStatus.nearDestination));
+        } else if (state.currentOrder?.status == OrderStatus.outForDelivery) {
+          if(geofence.radius[1].status == GeofenceStatus.ENTER) {
+            add(const ChangeOrderStatus(status: OrderStatus.nearDestination));
+          } else {
+            add(const ChangeOrderStatus(status: OrderStatus.outForDelivery));
+          }
         }
       }
     });

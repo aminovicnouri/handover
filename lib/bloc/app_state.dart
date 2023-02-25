@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart' show immutable;
 
 import '../model/order.dart';
@@ -9,21 +10,25 @@ class AppState {
   final bool serviceIsRunning;
   final LocationPermissionState? permissionState;
   final bool showBottomSheet;
+  final bool canBePickedOrDelivered;
 
-  const AppState({
-    required this.currentOrder,
-    required this.allOrders,
-    required this.serviceIsRunning,
-    required this.showBottomSheet,
-    this.permissionState,
-  });
+  const AppState(
+      {required this.currentOrder,
+      required this.allOrders,
+      required this.serviceIsRunning,
+      required this.showBottomSheet,
+      this.permissionState,
+      required this.canBePickedOrDelivered});
 
-   AppState.empty()
+  AppState.empty()
       : currentOrder = null,
         allOrders = [],
         serviceIsRunning = false,
-         showBottomSheet = false,
-        permissionState = null;
+        showBottomSheet = false,
+        permissionState = null,
+        canBePickedOrDelivered = false;
+
+
 }
 
 enum LocationPermissionState {
