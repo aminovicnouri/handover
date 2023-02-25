@@ -1,18 +1,17 @@
 import 'dart:async';
 
-import 'package:bloc/bloc.dart';
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geofence_service/geofence_service.dart';
 import 'package:handover/bloc/permissions.dart';
 import 'package:handover/model/order.dart';
 import 'package:handover/services/geofence_service_manager.dart';
 
-import '../../notifications/local_notification_service.dart';
 import '../../repositories/order_repository.dart';
-part 'home_event.dart';
-part 'home_state.dart';
 
+part 'home_event.dart';
+
+part 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   StreamSubscription? _geofenceSubscription;
@@ -26,14 +25,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<CheckPermissions>((event, emit) async {
       final status = await checkPermissions();
       emit(
-        HomeState(
-          allOrders: state.allOrders,
-          currentOrder: state.currentOrder,
-          serviceIsRunning: state.serviceIsRunning,
-          permissionState: status,
-          showBottomSheet: state.showBottomSheet,
-          canBePickedOrDelivered: state.canBePickedOrDelivered,
-        ),
+        state.copyWith(permissionState: status)
       );
     });
 
@@ -44,45 +36,26 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         await _orderRepository.updateOrder(order);
       }
       emit(
-        HomeState(
-            allOrders: state.allOrders,
-            currentOrder: order,
-            serviceIsRunning: state.serviceIsRunning,
-            permissionState: state.permissionState,
-            showBottomSheet: state.showBottomSheet,
-            canBePickedOrDelivered: state.canBePickedOrDelivered
-        ),
+        state.copyWith(currentOrder: order)
       );
+      _syncWithService();
     });
 
     on<ChangeOrderStatus>((event, emit) async {
       final order = state.currentOrder!;
       order.status = event.status;
-      if(event.status != OrderStatus.nearDestination) {
+      if (event.status != OrderStatus.nearDestination) {
         await _orderRepository.updateOrder(order);
       }
       emit(
-        HomeState(
-          allOrders: state.allOrders,
-          currentOrder: order,
-          serviceIsRunning: state.serviceIsRunning,
-          permissionState: state.permissionState,
-          showBottomSheet: state.showBottomSheet,
-          canBePickedOrDelivered: false,
-        ),
+        state.copyWith(currentOrder: order, canBePickedOrDelivered: false)
       );
+      _syncWithService();
     });
 
     on<AskForStatusChange>((event, emit) async {
       emit(
-        HomeState(
-          allOrders: state.allOrders,
-          currentOrder: state.currentOrder,
-          serviceIsRunning: state.serviceIsRunning,
-          permissionState: state.permissionState,
-          showBottomSheet: state.showBottomSheet,
-          canBePickedOrDelivered: event.canBePickedOrDelivered,
-        ),
+        state.copyWith(canBePickedOrDelivered: event.canBePickedOrDelivered),
       );
     });
 
@@ -90,48 +63,25 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       await _orderRepository.insertOrder(event.order);
       final list = await _orderRepository.getOrders();
       emit(
-        HomeState(
-            allOrders: list,
-            currentOrder: state.currentOrder,
-            serviceIsRunning: state.serviceIsRunning,
-            permissionState: state.permissionState,
-            showBottomSheet: state.showBottomSheet,
-            canBePickedOrDelivered: state.canBePickedOrDelivered
-        ),
+          state.copyWith(allOrders: list),
       );
     });
     on<InitialState>((event, emit) async {
       await _orderRepository.init();
       final list = await _orderRepository.getOrders();
       final running = list.where((element) =>
-      element.status != OrderStatus.idle &&
+          element.status != OrderStatus.idle &&
           element.status != OrderStatus.delivered);
       final current = running.isEmpty ? null : running.first;
       emit(
-        HomeState(
-            allOrders: list,
-            currentOrder: current,
-            serviceIsRunning: state.serviceIsRunning,
-            permissionState: state.permissionState,
-            showBottomSheet: state.showBottomSheet,
-            canBePickedOrDelivered: state.canBePickedOrDelivered
-        ),
+        state.copyWith(allOrders: list, currentOrder: current),
       );
-
-      if (state.currentOrder?.status != OrderStatus.idle) {
-        _listenToLocationChanges();
-      }
+      _syncWithService();
+      _listenToLocationChanges();
     });
     on<ShowBottomSheetEvent>((event, emit) async {
       emit(
-        HomeState(
-            allOrders: state.allOrders,
-            currentOrder: state.currentOrder,
-            serviceIsRunning: state.serviceIsRunning,
-            permissionState: state.permissionState,
-            showBottomSheet: event.show,
-            canBePickedOrDelivered: state.canBePickedOrDelivered
-        ),
+          state.copyWith(showBottomSheet: event.show)
       );
     });
 
@@ -148,35 +98,94 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   void _listenToLocationChanges() {
+    _geofenceSubscription?.cancel();
     _geofenceSubscription = GeofenceServiceManager.instance()
-        .geofenceStreamController
+        .controller
         .stream
         .listen((geofence) {
-      LocalNotificationService.showNotificationWithPayload(id: 111, title: geofence.id, body: geofence.status.name, payload: "");
-
       add(const ShowBottomSheetEvent(show: true));
-      if (geofence.id.contains("origin")) {
-        if (state.currentOrder?.status == OrderStatus.runningForPickUp) {
-          if(geofence.radius[0].status == GeofenceStatus.ENTER) {
-            add(const AskForStatusChange(canBePickedOrDelivered: true));
-          } else  if(geofence.radius[0].status == GeofenceStatus.EXIT) {
-            add(const AskForStatusChange(canBePickedOrDelivered: false));
-          }
-        } else if (state.currentOrder?.status == OrderStatus.picked && geofence.radius[0].status == GeofenceStatus.EXIT) {
-          add(const ChangeOrderStatus(status: OrderStatus.outForDelivery));
-        }
-      } else if (geofence.id.contains("destination")) {
-        if (state.currentOrder?.status == OrderStatus.nearDestination && geofence.radius[0].status == GeofenceStatus.ENTER) {
-          add(const AskForStatusChange(canBePickedOrDelivered: true));
-          _geofenceSubscription?.cancel();
-        } else if (state.currentOrder?.status == OrderStatus.outForDelivery) {
-          if(geofence.radius[1].status == GeofenceStatus.ENTER) {
-            add(const ChangeOrderStatus(status: OrderStatus.nearDestination));
-          } else {
-            add(const ChangeOrderStatus(status: OrderStatus.outForDelivery));
-          }
-        }
-      }
+      _handleGeofence(geofence);
     });
   }
+
+  void _handleGeofence(Geofence geofence) {
+    final radius0 = geofence.radius[0];
+    final radius1 = geofence.radius[1];
+    final currentOrderStatus = state.currentOrder?.status;
+
+    switch (geofence.id) {
+      case "origin":
+        if (currentOrderStatus == OrderStatus.runningForPickUp) {
+          if (radius0.status == GeofenceStatus.ENTER) {
+            add(const AskForStatusChange(canBePickedOrDelivered: true));
+          } else if (radius0.status == GeofenceStatus.EXIT) {
+            add(const AskForStatusChange(canBePickedOrDelivered: false));
+          }
+        } else if (currentOrderStatus == OrderStatus.picked &&
+            radius0.status == GeofenceStatus.EXIT) {
+          add(const ChangeOrderStatus(status: OrderStatus.outForDelivery));
+        }
+        break;
+
+      case "destination":
+        if (currentOrderStatus == OrderStatus.nearDestination) {
+          if (radius1.status == GeofenceStatus.EXIT) {
+            add(const ChangeOrderStatus(status: OrderStatus.outForDelivery));
+          }
+          if (radius0.status == GeofenceStatus.ENTER) {
+            add(const AskForStatusChange(canBePickedOrDelivered: true));
+          }
+        } else if (currentOrderStatus == OrderStatus.outForDelivery &&
+            radius1.status == GeofenceStatus.ENTER) {
+          add(const ChangeOrderStatus(status: OrderStatus.nearDestination));
+        }
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  void _syncWithService() {
+    List<Geofence> geofenceList = [];
+    final order = state.currentOrder;
+    if (order != null) {
+      switch (order.status) {
+        case OrderStatus.idle:
+        case OrderStatus.runningForPickUp:
+        case OrderStatus.picked:
+          geofenceList.add(Geofence(
+            id: "origin",
+            latitude: order.pickupLatitude,
+            longitude: order.pickupLongitude,
+            radius: [
+              GeofenceRadius(id: '${order.name}_origin_100m', length: 500),
+              GeofenceRadius(id: '${order.name}_origin_1000m', length: 5000),
+            ],
+          ));
+          break;
+
+        case OrderStatus.outForDelivery:
+        case OrderStatus.nearDestination:
+          geofenceList.add(Geofence(
+            id: "destination",
+            latitude: order.deliveryLatitude,
+            longitude: order.deliveryLongitude,
+            radius: [
+              GeofenceRadius(id: '${order.name}_destination_100m', length: 500),
+              GeofenceRadius(
+                  id: '${order.name}_destination_1000m', length: 5000),
+            ],
+          ));
+          break;
+
+        default:
+          break;
+      }
+    }
+    GeofenceServiceManager.instance().start(geofenceList);
+    _listenToLocationChanges();
+  }
 }
+
+

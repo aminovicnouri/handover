@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:geofence_service/geofence_service.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:handover/notifications/local_notification_service.dart';
+import 'package:rxdart/rxdart.dart';
+
+import '../model/order.dart';
+import '../notifications/local_notification_service.dart';
 
 class GeofenceServiceManager {
   GeofenceServiceManager._sharedInstance();
@@ -13,9 +15,11 @@ class GeofenceServiceManager {
 
   factory GeofenceServiceManager.instance() => _shared;
 
+  StreamController<Geofence> controller = BehaviorSubject();
+
   final _activityStreamController = StreamController<Activity>();
 
-  final geofenceStreamController = StreamController<Geofence>();
+ // final geofenceStreamController = StreamController<Geofence>();
 
   final locationStreamController = StreamController<Location>();
 
@@ -36,11 +40,11 @@ class GeofenceServiceManager {
       GeofenceRadius geofenceRadius,
       GeofenceStatus geofenceStatus,
       Location location) async {
-
+    LocalNotificationService.showNotificationWithPayload(id: 111, title: geofence.id, body: geofence.status.name, payload: "");
     print('geofence: ${geofence.toJson()}');
     print('geofenceRadius: ${geofenceRadius.toJson()}');
     print('geofenceStatus: ${geofenceStatus.toString()}');
-    geofenceStreamController.sink.add(geofence);
+    controller.sink.add(geofence);
   }
 
   // This function is to be called when the activity has changed.
@@ -73,20 +77,8 @@ class GeofenceServiceManager {
     print('ErrorCode: $errorCode');
   }
 
-  void start(List<Marker> markers) {
-    final geofenceList = markers
-        .map((e) => Geofence(
-              id: e.markerId.value,
-              latitude: e.position.latitude,
-              longitude: e.position.longitude,
-              radius: [
-                GeofenceRadius(id: '${e.markerId.value}_100m', length: 500),
-                GeofenceRadius(id: '${e.markerId.value}_1000m', length: 5000),
-              ],
-            ))
-        .toList();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  void start(List<Geofence> geofenceList) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _geofenceService
           .addGeofenceStatusChangeListener(_onGeofenceStatusChanged);
       _geofenceService.addLocationChangeListener(_onLocationChanged);
@@ -105,5 +97,4 @@ class GeofenceServiceManager {
   bool isRunningService() {
     return _geofenceService.isRunningService;
   }
-
 }

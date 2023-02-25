@@ -1,8 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-
-import 'package:hive/hive.dart';
 
 part 'order.g.dart';
 
@@ -21,6 +19,7 @@ class Order extends HiveObject {
     required this.rating,
     required this.price,
   });
+  
   @HiveField(0)
   final int? id;
 

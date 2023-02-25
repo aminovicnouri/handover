@@ -109,11 +109,6 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         strokeWidth: 0,
         fillColor: Colors.green[600]!.withOpacity(.3));
     final markers = {origin, destination};
-    final isRunning = GeofenceServiceManager.instance().isRunningService();
-    if(!isRunning) {
-      GeofenceServiceManager.instance().start(markers.toList());
-
-    }
 
     emit(MapState(
       controller: state.controller,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:handover/bloc/bottomSheet/bottom_sheet_bloc.dart';
+import 'package:handover/model/order.dart';
 
 import '../bloc/home/home_bloc.dart';
 import '../bloc/map/map_bloc.dart';
@@ -45,7 +46,7 @@ class HomePage extends StatelessWidget {
               if (state.showBottomSheet && !isBottomSheetVisible(context)) {
                 _showMyBottomSheet(context);
               }
-              if (mapBloc.state.markers.isEmpty) {
+              if (state.currentOrder != null && mapBloc.state.markers.isEmpty) {
                 mapBloc.add(AddMarkersEvent(order: state.currentOrder));
               }
 
@@ -69,8 +70,13 @@ class HomePage extends StatelessWidget {
                   return Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
-                      Text(
-                          'selected order: ${appState.currentOrder?.name ?? "null"}'),
+                      GestureDetector(
+                        onTap: () {
+                          context.read<HomeBloc>().add(const ChangeOrderStatus(status: OrderStatus.delivered));
+                        },
+                        child: Text(
+                            'selected order: ${appState.currentOrder?.name ?? "null"}'),
+                      ),
                       Expanded(
                         child: MapScreen(mapBloc: context.read<MapBloc>()),
                       ),

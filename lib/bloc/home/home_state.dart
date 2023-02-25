@@ -1,6 +1,5 @@
 part of 'home_bloc.dart';
 
-
 @immutable
 class HomeState {
   final Order? currentOrder;
@@ -12,11 +11,11 @@ class HomeState {
 
   const HomeState(
       {required this.currentOrder,
-        required this.allOrders,
-        required this.serviceIsRunning,
-        required this.showBottomSheet,
-        this.permissionState,
-        required this.canBePickedOrDelivered});
+      required this.allOrders,
+      required this.serviceIsRunning,
+      required this.showBottomSheet,
+      this.permissionState,
+      required this.canBePickedOrDelivered});
 
   HomeState.empty()
       : currentOrder = null,
@@ -26,7 +25,24 @@ class HomeState {
         permissionState = null,
         canBePickedOrDelivered = false;
 
-
+  HomeState copyWith({
+    Order? currentOrder,
+    List<Order>? allOrders,
+    bool? serviceIsRunning,
+    LocationPermissionState? permissionState,
+    bool? showBottomSheet,
+    bool? canBePickedOrDelivered,
+  }) {
+    return HomeState(
+      currentOrder: currentOrder ?? this.currentOrder,
+      allOrders: allOrders ?? this.allOrders,
+      serviceIsRunning: serviceIsRunning ?? this.serviceIsRunning,
+      permissionState: permissionState ?? this.permissionState,
+      showBottomSheet: showBottomSheet ?? this.showBottomSheet,
+      canBePickedOrDelivered:
+          canBePickedOrDelivered ?? this.canBePickedOrDelivered,
+    );
+  }
 }
 
 enum LocationPermissionState {
