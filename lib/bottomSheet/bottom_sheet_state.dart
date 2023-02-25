@@ -1,19 +1,32 @@
 part of 'bottom_sheet_bloc.dart';
 
-@immutable
-class BottomSheetState {
-  final List<Order> allOrders;
-  final Order? order;
+class BottomSheetState extends Equatable {
+  const BottomSheetState();
 
-  const BottomSheetState({
+  @override
+  List<Object> get props => [];
+}
+
+class BottomSheetListState extends BottomSheetState {
+  final List<Order> allOrders;
+
+  const BottomSheetListState({
     required this.allOrders,
-    required this.order,
   });
 
-  static BottomSheetState empty() {
-    return const BottomSheetState(
-      allOrders: [],
-      order: null
-    );
-  }
+  @override
+  List<Object> get props => [allOrders];
+}
+
+class BottomSheetOrderSelectedState extends BottomSheetState {
+  final Order currentOrder;
+  final bool canBePickedOrDelivered;
+
+  const BottomSheetOrderSelectedState({
+    required this.currentOrder,
+    this.canBePickedOrDelivered = false,
+  });
+
+  @override
+  List<Object> get props => [currentOrder, canBePickedOrDelivered];
 }

@@ -20,11 +20,11 @@ class OrdersBottomSheet extends StatelessWidget {
       bloc: bottomSheetBloc..add(Initialize(select: selectOrder)),
       builder: (context, appState) {
         return SizedBox(
-          height: appState.order == null ? 600 : 500,
+          height: appState is BottomSheetListState ? 600 : 500,
           child: Stack(
             children: [
               Container(
-                alignment: appState.order == null
+                alignment:appState is BottomSheetListState
                     ? Alignment.center
                     : Alignment.centerLeft,
                 height: 600,
@@ -36,7 +36,7 @@ class OrdersBottomSheet extends StatelessWidget {
                       topLeft: Radius.circular(30),
                       topRight: Radius.circular(30),
                     )),
-                child: appState.order == null
+                child: appState is BottomSheetListState
                     ? Column(
                         children: [
                           const SizedBox(
@@ -124,7 +124,7 @@ class OrdersBottomSheet extends StatelessWidget {
                         horizontal: 10,
                       ),
                       child: _Timeline(
-                        order: appState.order!,
+                        order: (appState as BottomSheetOrderSelectedState).currentOrder,
                       ),
                     ),
               ),

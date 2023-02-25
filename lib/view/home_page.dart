@@ -49,8 +49,15 @@ class HomePage extends StatelessWidget {
               if (mapBloc.state.markers.isEmpty) {
                 mapBloc.add(AddMarkersEvent(order: state.currentOrder));
               }
-              if(state.currentOrder?.status != bottomSheetBloc.state.order?.status) {
-                bottomSheetBloc.add(UpdateOrderEvent(order: state.currentOrder!));
+
+              if (bottomSheetBloc.state is BottomSheetOrderSelectedState) {
+                if (state.currentOrder?.status !=
+                    (bottomSheetBloc.state as BottomSheetOrderSelectedState)
+                        .currentOrder
+                        .status) {
+                  bottomSheetBloc
+                      .add(UpdateOrderEvent(order: state.currentOrder!));
+                }
               }
             },
             builder: (context, appState) {

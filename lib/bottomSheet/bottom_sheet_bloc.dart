@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
 import 'package:handover/model/order.dart';
 import 'package:handover/services/geofence_service_manager.dart';
 import 'package:meta/meta.dart';
@@ -15,7 +16,7 @@ class BottomSheetBloc extends Bloc<BottomSheetEvent, BottomSheetState> {
 
   BottomSheetBloc({required OrderRepository orderRepository})
       : _orderRepository = orderRepository,
-        super(BottomSheetState.empty()) {
+        super(const BottomSheetListState(allOrders: [])) {
 
     on<Initialize>((event, emit) async {
       await _orderRepository.init();
@@ -23,28 +24,27 @@ class BottomSheetBloc extends Bloc<BottomSheetEvent, BottomSheetState> {
       final running =
           list.where((element) =>  element.status != OrderStatus.idle && element.status != OrderStatus.delivered);
       if (running.isEmpty) {
-        emit(BottomSheetState(allOrders: list, order: null));
+        emit(BottomSheetListState(allOrders: list));
       } else {
         event.select(running.first);
-        emit(BottomSheetState(allOrders: list, order: running.first));
+        emit(BottomSheetOrderSelectedState(currentOrder: running.first));
       }
     });
 
     on<AddOrder>((event, emit) async {
       await _orderRepository.insertOrder(event.order);
       final list = await _orderRepository.getOrders();
-      emit(BottomSheetState(allOrders: list, order: state.order));
+      emit(BottomSheetListState(allOrders: list));
     });
     on<UpdateOrderEvent>((event, emit) async {
-      emit(BottomSheetState(allOrders: state.allOrders, order: event.order));
+      emit(BottomSheetOrderSelectedState(currentOrder: event.order));
     });
 
 
     on<SelectOrderBottomSheetEvent>((event, emit) async {
       event.select(event.order);
-      emit(BottomSheetState(
-        allOrders: state.allOrders,
-        order: event.order,
+      emit(BottomSheetOrderSelectedState(
+        currentOrder: event.order,
       ));
     });
   }
