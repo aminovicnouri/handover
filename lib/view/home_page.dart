@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:handover/bottomSheet/bottom_sheet_bloc.dart';
-import 'package:handover/map/map_bloc.dart';
+import 'package:handover/bloc/bottomSheet/bottom_sheet_bloc.dart';
 
-import '../bloc/app_bloc.dart';
-import '../bloc/app_state.dart';
-import '../bloc/bloc_event.dart';
+import '../bloc/home/home_bloc.dart';
+import '../bloc/map/map_bloc.dart';
 import '../repositories/order_repository_Impl.dart';
 import 'map_screen.dart';
 import 'orders_bottom_sheet.dart';
@@ -19,9 +17,9 @@ class HomePage extends StatelessWidget {
       create: (_) => OrderRepositoryImpl(),
       child: MultiBlocProvider(
         providers: [
-          BlocProvider<AppBloc>(
+          BlocProvider<HomeBloc>(
               create: (context) =>
-                  AppBloc(orderRepository: context.read<OrderRepositoryImpl>())
+                  HomeBloc(orderRepository: context.read<OrderRepositoryImpl>())
                     ..add(const CheckPermissions())
                     ..add(const InitialState())),
           BlocProvider<MapBloc>(create: (context) => MapBloc()),
@@ -34,13 +32,13 @@ class HomePage extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Home Page'),
           ),
-          body: BlocConsumer<AppBloc, AppState>(
+          body: BlocConsumer<HomeBloc, HomeState>(
             listenWhen: (previousState, currentState) {
               previousState.currentOrder?.status !=
                       currentState.currentOrder?.status;
               return true;
             },
-            listener: (BuildContext context, AppState state) {
+            listener: (BuildContext context, HomeState state) {
               final mapBloc = context.read<MapBloc>();
               final bottomSheetBloc = context.read<BottomSheetBloc>();
 
@@ -88,7 +86,7 @@ class HomePage extends StatelessWidget {
                   return Center(
                     child: TextButton(
                       onPressed: () {
-                        context.read<AppBloc>().add(
+                        context.read<HomeBloc>().add(
                               const RequestPermissions(),
                             );
                       },
@@ -107,7 +105,7 @@ class HomePage extends StatelessWidget {
                   return Center(
                     child: TextButton(
                       onPressed: () {
-                        context.read<AppBloc>().add(
+                        context.read<HomeBloc>().add(
                               const RequestPermissions(),
                             );
                       },
@@ -136,10 +134,10 @@ class HomePage extends StatelessWidget {
           return OrdersBottomSheet(
             bottomSheetBloc: context.read<BottomSheetBloc>(),
             selectOrder: (order) {
-              context.read<AppBloc>().add(SelectOrder(order: order));
+              context.read<HomeBloc>().add(SelectOrder(order: order));
             },
             updateOrder: (order) {
-              context.read<AppBloc>().add(ChangeOrderStatus(status: order.status));
+              context.read<HomeBloc>().add(ChangeOrderStatus(status: order.status));
             },
           );
         });

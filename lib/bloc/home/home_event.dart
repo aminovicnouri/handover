@@ -1,30 +1,27 @@
-import 'package:flutter/foundation.dart' show immutable;
-import 'package:geolocator/geolocator.dart';
-
-import '../model/order.dart';
+part of 'home_bloc.dart';
 
 @immutable
-abstract class AppEvent {
-  const AppEvent();
+abstract class HomeEvent {
+  const HomeEvent();
 }
 
 @immutable
-class StartLocationService implements AppEvent {
+class StartLocationService implements HomeEvent {
   const StartLocationService();
 }
 
 @immutable
-class StopLocationService implements AppEvent {
+class StopLocationService implements HomeEvent {
   const StopLocationService();
 }
 
 @immutable
-class CheckPermissions implements AppEvent {
+class CheckPermissions implements HomeEvent {
   const CheckPermissions();
 }
 
 @immutable
-class ChangeOrderStatus implements AppEvent {
+class ChangeOrderStatus implements HomeEvent {
   final OrderStatus status;
 
   const ChangeOrderStatus({
@@ -32,7 +29,7 @@ class ChangeOrderStatus implements AppEvent {
   });
 }
 @immutable
-class AskForStatusChange implements AppEvent {
+class AskForStatusChange implements HomeEvent {
   final bool canBePickedOrDelivered;
 
   const AskForStatusChange({
@@ -41,45 +38,38 @@ class AskForStatusChange implements AppEvent {
 }
 
 @immutable
-class RequestPermissions implements AppEvent {
+class RequestPermissions implements HomeEvent {
   const RequestPermissions();
 }
 
 @immutable
-class LocationUpdated implements AppEvent {
-  final Position position;
-
-  const LocationUpdated({required this.position});
-}
-
-@immutable
-class SelectOrder implements AppEvent {
+class SelectOrder implements HomeEvent {
   final Order order;
 
   const SelectOrder({required this.order});
 }
 
 @immutable
-class AddOrder implements AppEvent {
+class AddOrder implements HomeEvent {
   final Order order;
 
   const AddOrder({required this.order});
 }
 
 @immutable
-class ChangeOrderStatusEvent implements AppEvent {
+class ChangeOrderStatusEvent implements HomeEvent {
   final OrderStatus orderStatus;
 
   const ChangeOrderStatusEvent({required this.orderStatus});
 }
 
 @immutable
-class InitialState implements AppEvent {
+class InitialState implements HomeEvent {
   const InitialState();
 }
 
 @immutable
-class ShowBottomSheetEvent implements AppEvent {
+class ShowBottomSheetEvent implements HomeEvent {
   final bool show;
 
   const ShowBottomSheetEvent({

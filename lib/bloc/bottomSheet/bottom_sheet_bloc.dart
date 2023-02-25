@@ -1,11 +1,9 @@
-import 'package:bloc/bloc.dart';
-import 'package:equatable/equatable.dart';
-import 'package:handover/model/order.dart';
-import 'package:handover/services/geofence_service_manager.dart';
-import 'package:meta/meta.dart';
-import 'package:timelines/timelines.dart';
 
-import '../repositories/order_repository.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:handover/model/order.dart';
+
+import '../../repositories/order_repository.dart';
 
 part 'bottom_sheet_event.dart';
 

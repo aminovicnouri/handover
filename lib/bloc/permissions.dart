@@ -1,5 +1,6 @@
 import 'package:geolocator/geolocator.dart';
-import 'package:handover/bloc/app_state.dart';
+
+import 'home/home_bloc.dart';
 
 Future<LocationPermissionState> checkPermissions() async {
   bool serviceEnabled = await Geolocator.isLocationServiceEnabled();

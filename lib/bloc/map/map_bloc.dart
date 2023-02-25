@@ -6,7 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:handover/model/order.dart';
 import 'package:meta/meta.dart';
 
-import '../services/geofence_service_manager.dart';
+import '../../services/geofence_service_manager.dart';
 
 part 'map_event.dart';
 

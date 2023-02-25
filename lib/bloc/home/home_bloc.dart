@@ -1,28 +1,32 @@
 import 'dart:async';
 
+import 'package:bloc/bloc.dart';
+import 'package:meta/meta.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geofence_service/geofence_service.dart';
 import 'package:handover/bloc/permissions.dart';
 import 'package:handover/model/order.dart';
 import 'package:handover/services/geofence_service_manager.dart';
 
-import '../notifications/local_notification_service.dart';
-import '../repositories/order_repository.dart';
-import 'app_state.dart';
-import 'bloc_event.dart';
+import '../../notifications/local_notification_service.dart';
+import '../../repositories/order_repository.dart';
+part 'home_event.dart';
+part 'home_state.dart';
 
-class AppBloc extends Bloc<AppEvent, AppState> {
+
+class HomeBloc extends Bloc<HomeEvent, HomeState> {
   StreamSubscription? _geofenceSubscription;
   final OrderRepository _orderRepository;
 
-  AppBloc({required OrderRepository orderRepository})
+  HomeBloc({required OrderRepository orderRepository})
       : _orderRepository = orderRepository,
-        super(AppState.empty()) {
+        super(HomeState.empty()) {
     _orderRepository.init();
+
     on<CheckPermissions>((event, emit) async {
       final status = await checkPermissions();
       emit(
-        AppState(
+        HomeState(
           allOrders: state.allOrders,
           currentOrder: state.currentOrder,
           serviceIsRunning: state.serviceIsRunning,
@@ -40,13 +44,13 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         await _orderRepository.updateOrder(order);
       }
       emit(
-        AppState(
-          allOrders: state.allOrders,
-          currentOrder: order,
-          serviceIsRunning: state.serviceIsRunning,
-          permissionState: state.permissionState,
-          showBottomSheet: state.showBottomSheet,
-          canBePickedOrDelivered: state.canBePickedOrDelivered
+        HomeState(
+            allOrders: state.allOrders,
+            currentOrder: order,
+            serviceIsRunning: state.serviceIsRunning,
+            permissionState: state.permissionState,
+            showBottomSheet: state.showBottomSheet,
+            canBePickedOrDelivered: state.canBePickedOrDelivered
         ),
       );
     });
@@ -58,7 +62,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         await _orderRepository.updateOrder(order);
       }
       emit(
-        AppState(
+        HomeState(
           allOrders: state.allOrders,
           currentOrder: order,
           serviceIsRunning: state.serviceIsRunning,
@@ -71,7 +75,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
     on<AskForStatusChange>((event, emit) async {
       emit(
-        AppState(
+        HomeState(
           allOrders: state.allOrders,
           currentOrder: state.currentOrder,
           serviceIsRunning: state.serviceIsRunning,
@@ -86,13 +90,13 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       await _orderRepository.insertOrder(event.order);
       final list = await _orderRepository.getOrders();
       emit(
-        AppState(
-          allOrders: list,
-          currentOrder: state.currentOrder,
-          serviceIsRunning: state.serviceIsRunning,
-          permissionState: state.permissionState,
-          showBottomSheet: state.showBottomSheet,
-          canBePickedOrDelivered: state.canBePickedOrDelivered
+        HomeState(
+            allOrders: list,
+            currentOrder: state.currentOrder,
+            serviceIsRunning: state.serviceIsRunning,
+            permissionState: state.permissionState,
+            showBottomSheet: state.showBottomSheet,
+            canBePickedOrDelivered: state.canBePickedOrDelivered
         ),
       );
     });
@@ -100,17 +104,17 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       await _orderRepository.init();
       final list = await _orderRepository.getOrders();
       final running = list.where((element) =>
-          element.status != OrderStatus.idle &&
+      element.status != OrderStatus.idle &&
           element.status != OrderStatus.delivered);
       final current = running.isEmpty ? null : running.first;
       emit(
-        AppState(
-          allOrders: list,
-          currentOrder: current,
-          serviceIsRunning: state.serviceIsRunning,
-          permissionState: state.permissionState,
-          showBottomSheet: state.showBottomSheet,
-          canBePickedOrDelivered: state.canBePickedOrDelivered
+        HomeState(
+            allOrders: list,
+            currentOrder: current,
+            serviceIsRunning: state.serviceIsRunning,
+            permissionState: state.permissionState,
+            showBottomSheet: state.showBottomSheet,
+            canBePickedOrDelivered: state.canBePickedOrDelivered
         ),
       );
 
@@ -120,13 +124,13 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     });
     on<ShowBottomSheetEvent>((event, emit) async {
       emit(
-        AppState(
-          allOrders: state.allOrders,
-          currentOrder: state.currentOrder,
-          serviceIsRunning: state.serviceIsRunning,
-          permissionState: state.permissionState,
-          showBottomSheet: event.show,
-          canBePickedOrDelivered: state.canBePickedOrDelivered
+        HomeState(
+            allOrders: state.allOrders,
+            currentOrder: state.currentOrder,
+            serviceIsRunning: state.serviceIsRunning,
+            permissionState: state.permissionState,
+            showBottomSheet: event.show,
+            canBePickedOrDelivered: state.canBePickedOrDelivered
         ),
       );
     });

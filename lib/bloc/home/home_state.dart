@@ -1,10 +1,8 @@
-import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart' show immutable;
+part of 'home_bloc.dart';
 
-import '../model/order.dart';
 
 @immutable
-class AppState {
+class HomeState {
   final Order? currentOrder;
   final List<Order> allOrders;
   final bool serviceIsRunning;
@@ -12,15 +10,15 @@ class AppState {
   final bool showBottomSheet;
   final bool canBePickedOrDelivered;
 
-  const AppState(
+  const HomeState(
       {required this.currentOrder,
-      required this.allOrders,
-      required this.serviceIsRunning,
-      required this.showBottomSheet,
-      this.permissionState,
-      required this.canBePickedOrDelivered});
+        required this.allOrders,
+        required this.serviceIsRunning,
+        required this.showBottomSheet,
+        this.permissionState,
+        required this.canBePickedOrDelivered});
 
-  AppState.empty()
+  HomeState.empty()
       : currentOrder = null,
         allOrders = [],
         serviceIsRunning = false,
