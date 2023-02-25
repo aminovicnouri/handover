@@ -12,9 +12,14 @@ class AddOrder extends BottomSheetEvent{
   AddOrder({required this.order});
 }
 
-class SelectOrder extends BottomSheetEvent{
+class UpdateOrderEvent extends BottomSheetEvent{
+  final Order order;
+  UpdateOrderEvent({required this.order});
+}
+
+class SelectOrderBottomSheetEvent extends BottomSheetEvent{
   final Order order;
   final Function(Order order) select;
 
-  SelectOrder({required this.order, required this.select});
+  SelectOrderBottomSheetEvent({required this.order, required this.select});
 }

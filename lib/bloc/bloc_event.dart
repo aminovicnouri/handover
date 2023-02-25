@@ -53,6 +53,12 @@ class AddOrder implements AppEvent {
 
   const AddOrder({required this.order});
 }
+@immutable
+class ChangeOrderStatusEvent implements AppEvent {
+  final OrderStatus orderStatus;
+
+  const ChangeOrderStatusEvent({required this.orderStatus});
+}
 
 @immutable
 class InitialState implements AppEvent {

@@ -32,9 +32,28 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     });
 
     on<SelectOrder>((event, emit) async {
-      Order order = event.order;
-      order.status = OrderStatus.runningForPickUp;
-      await _orderRepository.updateOrder(order);
+      final order = event.order;
+      if (order.status == OrderStatus.idle) {
+        order.status = OrderStatus.runningForPickUp;
+        await _orderRepository.updateOrder(order);
+      }
+      emit(
+        AppState(
+          allOrders: state.allOrders,
+          currentOrder: order,
+          serviceIsRunning: state.serviceIsRunning,
+          permissionState: state.permissionState,
+          showBottomSheet: state.showBottomSheet,
+        ),
+      );
+    });
+
+    on<ChangeOrderStatus>((event, emit) async {
+      final order = state.currentOrder!;
+      order.status = event.status;
+      if(event.status != OrderStatus.nearDestination) {
+        await _orderRepository.updateOrder(order);
+      }
       emit(
         AppState(
           allOrders: state.allOrders,
@@ -62,22 +81,23 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<InitialState>((event, emit) async {
       await _orderRepository.init();
       final list = await _orderRepository.getOrders();
-      final running =
-          list.where((element) => element.status != OrderStatus.idle && element.status != OrderStatus.delivered);
+      final running = list.where((element) =>
+          element.status != OrderStatus.idle &&
+          element.status != OrderStatus.delivered);
       final current = running.isEmpty ? null : running.first;
-        emit(
-          AppState(
-            allOrders: list,
-            currentOrder: current,
-            serviceIsRunning: state.serviceIsRunning,
-            permissionState: state.permissionState,
-            showBottomSheet: state.showBottomSheet,
-          ),
-        );
+      emit(
+        AppState(
+          allOrders: list,
+          currentOrder: current,
+          serviceIsRunning: state.serviceIsRunning,
+          permissionState: state.permissionState,
+          showBottomSheet: state.showBottomSheet,
+        ),
+      );
 
-        if(state.currentOrder?.status != OrderStatus.idle){
-          _listenToLocationChanges();
-        }
+      if (state.currentOrder?.status != OrderStatus.idle) {
+        _listenToLocationChanges();
+      }
     });
     on<ShowBottomSheetEvent>((event, emit) async {
       emit(
@@ -107,22 +127,25 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     print("hhhhhhhhhh listen");
 
     _geofenceSubscription = GeofenceServiceManager.instance()
-       .geofenceStreamController
-       .stream
-       .listen((geofence) {
-     add(const ShowBottomSheetEvent(show: true));
-     // if(geofence.id.contains("origin") && state.currentOrder!.status == OrderStatus.idle) {
-     //   // if(geofence.radius[0].status == GeofenceStatus.ENTER)
-     // }
-     // if (geofence.radius[0].status == GeofenceStatus.ENTER) {
-     //   add(const ShowBottomSheetEvent(show: true));
-     //   if (state.currentOrder?.status == OrderStatus.idle) {
-     //     add(const ShowBottomSheetEvent(show: true));
-     //     //confirmPickup();
-     //   } else {
-     //     //confirmDelivery();
-     //   }
-     // }
-   });
+        .geofenceStreamController
+        .stream
+        .listen((geofence) {
+      add(const ShowBottomSheetEvent(show: true));
+
+      if (geofence.id.contains("origin")) {
+        if (state.currentOrder?.status == OrderStatus.runningForPickUp && geofence.radius[0].status == GeofenceStatus.ENTER) {
+          add(const ChangeOrderStatus(status: OrderStatus.picked));
+        } else if (state.currentOrder?.status == OrderStatus.picked && geofence.radius[0].status == GeofenceStatus.EXIT) {
+          add(const ChangeOrderStatus(status: OrderStatus.outForDelivery));
+        }
+      } else if (geofence.id.contains("destination")) {
+        if (state.currentOrder?.status == OrderStatus.nearDestination && geofence.radius[0].status == GeofenceStatus.ENTER) {
+          add(const ChangeOrderStatus(status: OrderStatus.delivered));
+          _geofenceSubscription?.cancel();
+        } else if (state.currentOrder?.status == OrderStatus.outForDelivery && geofence.radius[1].status == GeofenceStatus.ENTER) {
+          add(const ChangeOrderStatus(status: OrderStatus.nearDestination));
+        }
+      }
+    });
   }
 }

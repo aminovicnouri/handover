@@ -35,9 +35,12 @@ class BottomSheetBloc extends Bloc<BottomSheetEvent, BottomSheetState> {
       final list = await _orderRepository.getOrders();
       emit(BottomSheetState(allOrders: list, order: state.order));
     });
+    on<UpdateOrderEvent>((event, emit) async {
+      emit(BottomSheetState(allOrders: state.allOrders, order: event.order));
+    });
 
 
-    on<SelectOrder>((event, emit) async {
+    on<SelectOrderBottomSheetEvent>((event, emit) async {
       event.select(event.order);
       emit(BottomSheetState(
         allOrders: state.allOrders,

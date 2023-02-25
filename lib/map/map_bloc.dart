@@ -76,13 +76,13 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     Circle origin_100m = Circle(
         circleId: const CircleId("origin_100m"),
         center: origin.position,
-        radius: 100,
+        radius: 500,
         strokeWidth: 0,
         fillColor: Colors.blue[600]!.withOpacity(.5));
     Circle origin_1km = Circle(
         circleId: const CircleId("origin_1km"),
         center: origin.position,
-        radius: 1000,
+        radius: 5000,
         strokeWidth: 0,
         fillColor: Colors.blue[600]!.withOpacity(.3));
 
@@ -98,14 +98,14 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     Circle destination_100m = Circle(
         circleId: const CircleId("destination_100m"),
         center: destination.position,
-        radius: 100,
+        radius: 500,
         strokeWidth: 0,
         fillColor: Colors.green[600]!.withOpacity(.5));
 
     Circle destination_1km = Circle(
         circleId: const CircleId("destination_1km"),
         center: destination.position,
-        radius: 1000,
+        radius: 5000,
         strokeWidth: 0,
         fillColor: Colors.green[600]!.withOpacity(.3));
     final markers = {origin, destination};

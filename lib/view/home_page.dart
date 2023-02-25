@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:handover/bottomSheet/bottom_sheet_bloc.dart';
 import 'package:handover/map/map_bloc.dart';
 
 import '../bloc/app_bloc.dart';
@@ -24,21 +25,32 @@ class HomePage extends StatelessWidget {
                     ..add(const CheckPermissions())
                     ..add(const InitialState())),
           BlocProvider<MapBloc>(create: (context) => MapBloc()),
+          BlocProvider<BottomSheetBloc>(
+              create: (context) => BottomSheetBloc(
+                    orderRepository: context.read<OrderRepositoryImpl>(),
+                  )),
         ],
         child: Scaffold(
           appBar: AppBar(
             title: const Text('Home Page'),
           ),
           body: BlocConsumer<AppBloc, AppState>(
+            listenWhen: (previousState, currentState) {
+              previousState.currentOrder?.status !=
+                  currentState.currentOrder?.status;
+              return true;
+            },
             listener: (BuildContext context, AppState state) {
+              final mapBloc = context.read<MapBloc>();
+              final bottomSheetBloc = context.read<BottomSheetBloc>();
               if (state.showBottomSheet && !isBottomSheetVisible(context)) {
                 _showMyBottomSheet(context);
               }
-              if (state.currentOrder != null &&
-                  context.read<MapBloc>().state.markers.isEmpty) {
-                context
-                    .read<MapBloc>()
-                    .add(AddMarkersEvent(order: state.currentOrder));
+              if (mapBloc.state.markers.isEmpty) {
+                mapBloc.add(AddMarkersEvent(order: state.currentOrder));
+              }
+              if(state.currentOrder?.status != bottomSheetBloc.state.order?.status) {
+                bottomSheetBloc.add(UpdateOrderEvent(order: state.currentOrder!));
               }
             },
             builder: (context, appState) {
@@ -110,6 +122,7 @@ class HomePage extends StatelessWidget {
         context: context,
         builder: (BuildContext buildContext) {
           return OrdersBottomSheet(
+            bottomSheetBloc: context.read<BottomSheetBloc>(),
             selectOrder: (order) {
               context.read<AppBloc>().add(SelectOrder(order: order));
             },

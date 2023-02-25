@@ -24,9 +24,7 @@ class MapScreen extends StatelessWidget {
               Text("markers ${state.markers.length}"),
               Expanded(child: GoogleMap(
                 onMapCreated: (controller) {
-                  context
-                      .read<MapBloc>()
-                      .add(InitControllerEvent(controller: controller));
+                  mapBloc.add(InitControllerEvent(controller: controller));
                 },
                 markers: state.markers,
                 circles: state.circles,

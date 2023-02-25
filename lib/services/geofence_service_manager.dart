@@ -81,8 +81,8 @@ class GeofenceServiceManager {
               latitude: e.position.latitude,
               longitude: e.position.longitude,
               radius: [
-                GeofenceRadius(id: '${e.markerId.value}_100m', length: 100),
-                GeofenceRadius(id: '${e.markerId.value}_1000m', length: 1000),
+                GeofenceRadius(id: '${e.markerId.value}_100m', length: 500),
+                GeofenceRadius(id: '${e.markerId.value}_1000m', length: 5000),
               ],
             ))
         .toList();
