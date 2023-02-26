@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:handover/bloc/bottomSheet/bottom_sheet_bloc.dart';
 import 'package:handover/model/order.dart';
 import 'package:handover/utils/constants.dart';
-import 'package:handover/view/my_button.dart';
+import 'package:handover/view/widgets/my_button.dart';
 import 'package:intl/intl.dart';
 import 'package:timelines/timelines.dart';
+
+part 'widgets/order_list_widget.dart';
 
 class OrdersBottomSheet extends StatelessWidget {
   const OrdersBottomSheet({
@@ -26,9 +28,8 @@ class OrdersBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<BottomSheetBloc, BottomSheetState>(
+    return BlocBuilder<BottomSheetBloc, BottomSheetState>(
       bloc: bottomSheetBloc..add(Initialize(select: selectOrder)),
-      listener: (context, state) {},
       builder: (context, appState) {
         return SizedBox(
           height: appState.currentOrder == null ? 500.h : 500.h,
@@ -60,86 +61,10 @@ class OrdersBottomSheet extends StatelessWidget {
                             topRight: Radius.circular(30),
                           )),
                       child: appState.currentOrder == null
-                          ? Column(
-                              children: [
-                                SizedBox(
-                                  height: 40.h,
-                                ),
-                                Expanded(
-                                  child: ListView.builder(
-                                    padding: EdgeInsets.only(top: 40.h),
-                                    itemCount: appState.allOrders.length,
-                                    itemBuilder: (context, index) =>
-                                        GestureDetector(
-                                      onTap: () {
-                                        bottomSheetBloc.add(
-                                            SelectOrderBottomSheetEvent(
-                                                order:
-                                                    appState.allOrders[index],
-                                                select: selectOrder));
-                                      },
-                                      child: Container(
-                                        margin: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 5),
-                                        padding: EdgeInsets.all(10.sp),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  appState
-                                                      .allOrders[index].name,
-                                                  style: TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 20.sp),
-                                                ),
-                                                const SizedBox(
-                                                  height: 5,
-                                                ),
-                                                Text(
-                                                  appState
-                                                      .allOrders[index].address,
-                                                  style: TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 16.sp),
-                                                ),
-                                              ],
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () {},
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: Text(
-                                                  appState.allOrders[index]
-                                                      .status.value,
-                                                  style: TextStyle(
-                                                      fontSize: 14.sp),
-                                                ),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                MyButton(
-                                  text: 'Add Order',
-                                  onTap: () {
-                                    context.go('/addOrder');
-                                  },
-                                  icon: Icons.add_circle,
-                                ),
-                              ],
+                          ? OrderListWidget(
+                              bottomSheetBloc: bottomSheetBloc,
+                              selectOrder: selectOrder,
+                              allOrders: appState.allOrders,
                             )
                           : appState.currentOrder!.status !=
                                   OrderStatus.delivered

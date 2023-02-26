@@ -23,7 +23,6 @@ class MapScreen extends StatelessWidget {
             circles: state.circles,
             initialCameraPosition: state.position,
             myLocationEnabled: true,
-            myLocationButtonEnabled: false,
           );
         },
       ),

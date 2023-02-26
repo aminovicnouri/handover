@@ -3,14 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:handover/notifications/local_notification_service.dart';
 import 'package:handover/view/add_order_screen.dart';
 import 'package:handover/view/home_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 Future<void> main() async {
   await Hive.initFlutter();
-  LocalNotificationService.initialize();
   runApp(
     ScreenUtilInit(
       designSize: const Size(360, 690),

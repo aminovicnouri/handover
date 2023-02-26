@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geofence_service/geofence_service.dart';
 import 'package:handover/bloc/bottomSheet/bottom_sheet_bloc.dart';
 import 'package:handover/utils/constants.dart';
-import 'package:handover/view/my_button.dart';
+import 'package:handover/view/widgets/my_button.dart';
 
 import '../bloc/home/home_bloc.dart';
 import '../bloc/map/map_bloc.dart';
@@ -105,41 +105,6 @@ class HomePage extends StatelessWidget {
                       ),
                     ],
                   );
-
-                  switch (appState.permissionState) {
-                    case LocationPermissionState.granted:
-
-                    case LocationPermissionState.denied:
-                      return Center(
-                        child: TextButton(
-                          onPressed: () {
-                            context.read<HomeBloc>().add(
-                                  const RequestPermissions(),
-                                );
-                          },
-                          child: const Text('Request permissions'),
-                        ),
-                      );
-                    case LocationPermissionState.deniedForever:
-                      return const Center(
-                        child: Text('Permissions permanently denied.'),
-                      );
-                    case LocationPermissionState.locationServiceDisabled:
-                      return const Center(
-                        child: Text('Location service disabled.'),
-                      );
-                    case null:
-                      return Center(
-                        child: TextButton(
-                          onPressed: () {
-                            context.read<HomeBloc>().add(
-                                  const RequestPermissions(),
-                                );
-                          },
-                          child: const Text('Request permissions'),
-                        ),
-                      );
-                  }
                 },
               ),
             ),

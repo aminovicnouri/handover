@@ -7,6 +7,7 @@ import 'package:handover/bloc/permissions.dart';
 import 'package:handover/model/order.dart';
 import 'package:handover/services/geofence_service_manager.dart';
 
+import '../../notifications/local_notification_service.dart';
 import '../../repositories/order_repository.dart';
 
 part 'home_event.dart';
@@ -23,8 +24,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     _orderRepository.init();
 
     on<CheckPermissions>((event, emit) async {
-      final status = await checkPermissions();
-      emit(state.copyWith(permissionState: status));
+      await LocalNotificationService.initialize();
+      await checkPermissions();
     });
 
     on<SelectOrder>((event, emit) async {
@@ -41,7 +42,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           HomeState(
               currentOrder: null,
               allOrders: orders,
-              serviceIsRunning: state.serviceIsRunning,
               showBottomSheet: state.showBottomSheet,
               canBePickedOrDelivered: false),
         );
@@ -54,7 +54,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       if (event.status != OrderStatus.nearDestination) {
         await _orderRepository.updateOrder(order);
       }
-      emit(state.copyWith(currentOrder: order, canBePickedOrDelivered: false));
+      emit(state.copyWith(currentOrder: order, canBePickedOrDelivered: false, showBottomSheet: true));
       if (state.currentOrder?.status == OrderStatus.outForDelivery &&
           (GeofenceServiceManager.instance().operationGeofence?.id ?? "")
               .contains("origin")) {

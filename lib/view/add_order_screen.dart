@@ -5,8 +5,8 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:go_router/go_router.dart';
 import 'package:handover/bloc/add_order/add_order_bloc.dart';
 import 'package:handover/repositories/order_repository_Impl.dart';
-import 'package:handover/view/my_button.dart';
-import 'package:handover/view/text_field.dart';
+import 'package:handover/view/widgets/my_button.dart';
+import 'package:handover/view/widgets/text_field.dart';
 
 import '../utils/constants.dart';
 
