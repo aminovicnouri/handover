@@ -1,11 +1,13 @@
 import 'package:handover/model/order.dart';
 import 'package:hive/hive.dart';
+
 import 'order_repository.dart';
 
+class OrderRepositoryImpl extends OrderRepository {
+  static Box? orders;
 
-class OrderRepositoryImpl extends OrderRepository{
-  static Box? orders ;
-  static Box? status ;
+  static Box? status;
+
   static bool isInitialised = false;
 
   @override
@@ -14,21 +16,21 @@ class OrderRepositoryImpl extends OrderRepository{
   }
 
   @override
-  Future<List<Order>> getOrders() async{
-    List<Order> items = [] ;
-    if( orders != null && orders!.values.isNotEmpty){
+  Future<List<Order>> getOrders() async {
+    List<Order> items = [];
+    if (orders != null && orders!.values.isNotEmpty) {
       items.addAll(orders!.values.map((e) => e as Order));
     }
     return items;
   }
 
   @override
-  Future<void> init() async{
-    if(!isInitialised) {
-      if(!Hive.isAdapterRegistered(1)) {
+  Future<void> init() async {
+    if (!isInitialised) {
+      if (!Hive.isAdapterRegistered(1)) {
         Hive.registerAdapter<Order>(OrderAdapter());
       }
-      if(!Hive.isAdapterRegistered(2)) {
+      if (!Hive.isAdapterRegistered(2)) {
         Hive.registerAdapter<OrderStatus>(OrderStatusAdapter());
       }
 
@@ -44,7 +46,7 @@ class OrderRepositoryImpl extends OrderRepository{
   }
 
   @override
-  Future<void> updateOrder(Order order) async{
+  Future<void> updateOrder(Order order) async {
     order.save();
   }
 }

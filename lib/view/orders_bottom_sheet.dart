@@ -37,12 +37,13 @@ class OrdersBottomSheet extends StatelessWidget {
               Column(
                 children: [
                   GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       context.pop();
                     },
                     child: Container(
                       color: Colors.transparent,
-                      height: 60.h,),
+                      height: 60.h,
+                    ),
                   ),
                   Expanded(
                     child: Container(
@@ -61,18 +62,20 @@ class OrdersBottomSheet extends StatelessWidget {
                       child: appState.currentOrder == null
                           ? Column(
                               children: [
-                                 SizedBox(
+                                SizedBox(
                                   height: 40.h,
                                 ),
                                 Expanded(
                                   child: ListView.builder(
                                     padding: EdgeInsets.only(top: 40.h),
                                     itemCount: appState.allOrders.length,
-                                    itemBuilder: (context, index) => GestureDetector(
+                                    itemBuilder: (context, index) =>
+                                        GestureDetector(
                                       onTap: () {
                                         bottomSheetBloc.add(
                                             SelectOrderBottomSheetEvent(
-                                                order: appState.allOrders[index],
+                                                order:
+                                                    appState.allOrders[index],
                                                 select: selectOrder));
                                       },
                                       child: Container(
@@ -80,7 +83,8 @@ class OrdersBottomSheet extends StatelessWidget {
                                             horizontal: 10, vertical: 5),
                                         padding: EdgeInsets.all(10.sp),
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
                                         ),
                                         child: Row(
                                           mainAxisAlignment:
@@ -91,7 +95,8 @@ class OrdersBottomSheet extends StatelessWidget {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  appState.allOrders[index].name,
+                                                  appState
+                                                      .allOrders[index].name,
                                                   style: TextStyle(
                                                       color: Colors.black,
                                                       fontSize: 20.sp),
@@ -100,9 +105,9 @@ class OrdersBottomSheet extends StatelessWidget {
                                                   height: 5,
                                                 ),
                                                 Text(
-                                                  appState.allOrders[index].address,
-                                                  style:
-                                                  TextStyle(
+                                                  appState
+                                                      .allOrders[index].address,
+                                                  style: TextStyle(
                                                       color: Colors.black,
                                                       fontSize: 16.sp),
                                                 ),
@@ -111,8 +116,14 @@ class OrdersBottomSheet extends StatelessWidget {
                                             ElevatedButton(
                                               onPressed: () {},
                                               child: Padding(
-                                                padding: const EdgeInsets.all(8.0),
-                                                child: Text(appState.allOrders[index].status.value, style: TextStyle(fontSize: 14.sp),),
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  appState.allOrders[index]
+                                                      .status.value,
+                                                  style: TextStyle(
+                                                      fontSize: 14.sp),
+                                                ),
                                               ),
                                             )
                                           ],
@@ -127,11 +138,11 @@ class OrdersBottomSheet extends StatelessWidget {
                                     context.go('/addOrder');
                                   },
                                   icon: Icons.add_circle,
-
                                 ),
                               ],
                             )
-                          : appState.currentOrder!.status != OrderStatus.delivered
+                          : appState.currentOrder!.status !=
+                                  OrderStatus.delivered
                               ? Container(
                                   margin: EdgeInsets.only(
                                     top: 100.h,
@@ -150,14 +161,18 @@ class OrdersBottomSheet extends StatelessWidget {
                                                 onPressed: () {
                                                   bottomSheetBloc
                                                       .add(UpdateOrderEvent(
-                                                    order: appState.currentOrder!,
-                                                    canBePickedOrDelivered: true,
+                                                    order:
+                                                        appState.currentOrder!,
+                                                    canBePickedOrDelivered:
+                                                        true,
                                                     updateOrder: updateOrder,
                                                   ));
                                                 },
                                                 child: Text(
-                                                  appState.currentOrder!.status ==
-                                                          OrderStatus.runningForPickUp
+                                                  appState.currentOrder!
+                                                              .status ==
+                                                          OrderStatus
+                                                              .runningForPickUp
                                                       ? "Confirm pick up"
                                                       : "Confirm delivery",
                                                 ))
@@ -169,8 +184,10 @@ class OrdersBottomSheet extends StatelessWidget {
                               : Container(
                                   margin: const EdgeInsets.only(top: 100),
                                   child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
                                       RatingBar.builder(
                                         initialRating: 1,
@@ -186,27 +203,30 @@ class OrdersBottomSheet extends StatelessWidget {
                                         ),
                                         onRatingUpdate: (rating) {
                                           bottomSheetBloc.add(
-                                              UpdateOrderRatingEvent(rating: rating));
+                                              UpdateOrderRatingEvent(
+                                                  rating: rating));
                                         },
                                       ),
                                       Column(
                                         children: [
                                           Row(
                                             mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
+                                                MainAxisAlignment.spaceEvenly,
                                             children: [
                                               const Text(
                                                 "Pickup time: ",
                                                 style: TextStyle(
-                                                    fontWeight: FontWeight.bold),
+                                                    fontWeight:
+                                                        FontWeight.bold),
                                               ),
                                               Text(
                                                 DateFormat('hh:mm a').format(
-                                                  DateTime.fromMillisecondsSinceEpoch(
-                                                      (appState.currentOrder!
-                                                          .pickUpTime! *
-                                                          1000)
-                                                          .toInt()),
+                                                  DateTime
+                                                      .fromMillisecondsSinceEpoch(
+                                                    (appState.currentOrder!
+                                                            .pickUpTime!)
+                                                        .toInt(),
+                                                  ).toLocal(),
                                                 ),
                                               ),
                                             ],
@@ -216,20 +236,22 @@ class OrdersBottomSheet extends StatelessWidget {
                                           ),
                                           Row(
                                             mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
+                                                MainAxisAlignment.spaceEvenly,
                                             children: [
                                               const Text(
                                                 "Deliver time: ",
                                                 style: TextStyle(
-                                                    fontWeight: FontWeight.bold),
+                                                    fontWeight:
+                                                        FontWeight.bold),
                                               ),
                                               Text(
                                                 DateFormat('hh:mm a').format(
                                                   DateTime.fromMillisecondsSinceEpoch(
-                                                      (appState.currentOrder!
-                                                          .deliveryTime! *
-                                                          1000)
-                                                          .toInt()),
+                                                          (appState
+                                                                  .currentOrder!
+                                                                  .deliveryTime!)
+                                                              .toInt())
+                                                      .toLocal(),
                                                 ),
                                               ),
                                             ],
@@ -245,7 +267,8 @@ class OrdersBottomSheet extends StatelessWidget {
                                                   const Text(
                                                     "Total",
                                                     style: TextStyle(
-                                                        fontWeight: FontWeight.bold),
+                                                        fontWeight:
+                                                            FontWeight.bold),
                                                   ),
                                                   const SizedBox(
                                                     height: 10,
@@ -253,7 +276,8 @@ class OrdersBottomSheet extends StatelessWidget {
                                                   Text(
                                                     '\$ ${appState.currentOrder!.price}',
                                                     style: const TextStyle(
-                                                        fontWeight: FontWeight.bold),
+                                                        fontWeight:
+                                                            FontWeight.bold),
                                                   ),
                                                 ],
                                               ),
@@ -264,27 +288,43 @@ class OrdersBottomSheet extends StatelessWidget {
                                             alignment: Alignment.centerRight,
                                             child: GestureDetector(
                                               onTap: () {
-                                                bottomSheetBloc.add(SubmitOrderEvent(order: appState.currentOrder!, clear: clearSelection));
+                                                bottomSheetBloc.add(
+                                                    SubmitOrderEvent(
+                                                        order: appState
+                                                            .currentOrder!,
+                                                        clear: clearSelection));
                                               },
                                               child: Container(
                                                 width: 120,
                                                 height: 40,
                                                 decoration: const BoxDecoration(
-                                                    color: Colors.white,
-                                                    borderRadius: BorderRadius.only(
-                                                      topLeft: Radius.circular(20),
-                                                      bottomLeft: Radius.circular(20),
-                                                    ),),
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                    topLeft:
+                                                        Radius.circular(20),
+                                                    bottomLeft:
+                                                        Radius.circular(20),
+                                                  ),
+                                                ),
                                                 child: Center(
                                                   child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceAround,
                                                     children: const [
-                                                       Text(
+                                                      Text(
                                                         "Submit",
                                                         style: TextStyle(
-                                                            fontWeight: FontWeight.bold),
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
                                                       ),
-                                                      Icon(Icons.arrow_forward_rounded, size: 18,)
+                                                      Icon(
+                                                        Icons
+                                                            .arrow_forward_rounded,
+                                                        size: 18,
+                                                      )
                                                     ],
                                                   ),
                                                 ),
@@ -306,17 +346,20 @@ class OrdersBottomSheet extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 70.sp,
-                      backgroundImage:const AssetImage('assets/images/luna_pic.jpeg'),
+                      backgroundImage:
+                          const AssetImage('assets/images/luna_pic.jpeg'),
                       //backgroundColor: Colors.red,
                     ),
-                    const SizedBox(height: 20,),
-                    appState.currentOrder != null ? Text(
-                      appState.currentOrder!.name,
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        fontSize: 20.sp
-                      ),
-                    ) : const SizedBox(),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    appState.currentOrder != null
+                        ? Text(
+                            appState.currentOrder!.name,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 20.sp),
+                          )
+                        : const SizedBox(),
                   ],
                 ),
               ),
@@ -328,12 +371,10 @@ class OrdersBottomSheet extends StatelessWidget {
   }
 }
 
-
-
 class _Timeline extends StatelessWidget {
   final Order order;
 
-  const _Timeline({super.key, required this.order});
+  const _Timeline({required this.order});
 
   @override
   Widget build(BuildContext context) {
@@ -351,7 +392,6 @@ class _Timeline extends StatelessWidget {
       padding: const EdgeInsets.only(top: 20.0),
       builder: TimelineTileBuilder.connected(
         indicatorBuilder: (context, index) {
-          final status = data[index];
           return OutlinedDotIndicator(
             color: data.indexOf(order.status) >= index
                 ? Colors.black
@@ -363,7 +403,7 @@ class _Timeline extends StatelessWidget {
           );
         },
         connectorBuilder: (context, index, connectorType) {
-           Color? color;
+          Color? color;
           if (index + 1 < data.length - 1) {
             color = data.indexOf(order.status) > index
                 ? Colors.black

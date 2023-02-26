@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -92,16 +91,14 @@ class HomePage extends StatelessWidget {
                               alignment: Alignment.bottomCenter,
                               child: MyButton(
                                 height: 45.h,
-                                width: MediaQuery.of(context).size.width*.7,
+                                width: MediaQuery.of(context).size.width * .7,
                                 backgroundColor: primaryColor,
                                 text: 'Check Order',
                                 onTap: () {
                                   _showMyBottomSheet(context);
                                 },
                                 icon: Icons.delivery_dining,
-
                               ),
-
                             )
                           ],
                         ),

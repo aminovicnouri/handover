@@ -28,33 +28,33 @@ class MyButton extends StatelessWidget {
       child: GestureDetector(
           onTap: onTap,
           child: Container(
-            height: height??45.h,
-            width: width??MediaQuery.of(context).size.width * .6,
+            height: height ?? 45.h,
+            width: width ?? MediaQuery.of(context).size.width * .6,
             padding: const EdgeInsets.symmetric(horizontal: 30),
-            margin:  const EdgeInsets.symmetric(vertical: 20),
+            margin: const EdgeInsets.symmetric(vertical: 20),
             decoration: BoxDecoration(
-              borderRadius:
-              BorderRadius.circular(9),
-              color: backgroundColor??Colors.black,
+              borderRadius: BorderRadius.circular(9),
+              color: backgroundColor ?? Colors.black,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                icon == null? const SizedBox(): Icon(
-                  icon,
-                  color: textColor??Colors.white,
-                  size: 30.sp,
-                ),
+                icon == null
+                    ? const SizedBox()
+                    : Icon(
+                        icon,
+                        color: textColor ?? Colors.white,
+                        size: 30.sp,
+                      ),
                 Expanded(
                     child: Center(
                         child: Text(
-                          'Add Order',
-                          style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white
-                          ),
-                        )))
+                  'Add Order',
+                  style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                )))
               ],
             ),
           )),

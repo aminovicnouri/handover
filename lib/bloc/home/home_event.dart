@@ -28,6 +28,7 @@ class ChangeOrderStatus implements HomeEvent {
     required this.status,
   });
 }
+
 @immutable
 class AskForStatusChange implements HomeEvent {
   final bool canBePickedOrDelivered;

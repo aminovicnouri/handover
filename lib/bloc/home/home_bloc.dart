@@ -59,6 +59,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           (GeofenceServiceManager.instance().operationGeofence?.id ?? "")
               .contains("origin")) {
         _syncWithService();
+      } else if (state.currentOrder?.status == OrderStatus.delivered) {
+        GeofenceServiceManager.instance().updateGeofences([]);
       }
     });
 
@@ -107,41 +109,43 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   void _listenToLocationChanges() {
     _geofenceSubscription?.cancel();
-    _geofenceSubscription =
-        GeofenceServiceManager.instance().controller.stream.listen((geofence) {
+    _geofenceSubscription = GeofenceServiceManager.instance()
+        .geofenceStreamController
+        .stream
+        .listen((geofence) {
       _handleGeofence(geofence);
     });
   }
 
   void _handleGeofence(Geofence geofence) {
-    final radius0 = geofence.radius[0];
-    final radius1 = geofence.radius[1];
+    final radius5km = geofence.radius[1];
+    final radius500m = geofence.radius[0];
     final currentOrderStatus = state.currentOrder?.status;
 
     switch (geofence.id) {
       case "origin":
         if (currentOrderStatus == OrderStatus.runningForPickUp) {
-          if (radius0.status == GeofenceStatus.ENTER) {
+          if (radius5km.status == GeofenceStatus.ENTER) {
             add(const AskForStatusChange(canBePickedOrDelivered: true));
-          } else if (radius0.status == GeofenceStatus.EXIT) {
+          } else if (radius5km.status == GeofenceStatus.EXIT) {
             add(const AskForStatusChange(canBePickedOrDelivered: false));
           }
         } else if (currentOrderStatus == OrderStatus.picked &&
-            radius0.status == GeofenceStatus.EXIT) {
+            radius5km.status == GeofenceStatus.EXIT) {
           add(const ChangeOrderStatus(status: OrderStatus.outForDelivery));
         }
         break;
 
       case "destination":
         if (currentOrderStatus == OrderStatus.nearDestination) {
-          if (radius1.status == GeofenceStatus.EXIT) {
+          if (radius500m.status == GeofenceStatus.EXIT) {
             add(const ChangeOrderStatus(status: OrderStatus.outForDelivery));
           }
-          if (radius0.status == GeofenceStatus.ENTER) {
+          if (radius5km.status == GeofenceStatus.ENTER) {
             add(const AskForStatusChange(canBePickedOrDelivered: true));
           }
         } else if (currentOrderStatus == OrderStatus.outForDelivery &&
-            radius1.status == GeofenceStatus.ENTER) {
+            radius500m.status == GeofenceStatus.ENTER) {
           add(const ChangeOrderStatus(status: OrderStatus.nearDestination));
         }
         break;
@@ -164,8 +168,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             latitude: order.pickupLatitude,
             longitude: order.pickupLongitude,
             radius: [
-              GeofenceRadius(id: '${order.name}_origin_100m', length: 500),
               GeofenceRadius(id: '${order.name}_origin_1000m', length: 5000),
+              GeofenceRadius(id: '${order.name}_origin_100m', length: 500),
             ],
           ));
           break;
@@ -177,9 +181,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             latitude: order.deliveryLatitude,
             longitude: order.deliveryLongitude,
             radius: [
-              GeofenceRadius(id: '${order.name}_destination_100m', length: 500),
               GeofenceRadius(
                   id: '${order.name}_destination_1000m', length: 5000),
+              GeofenceRadius(id: '${order.name}_destination_100m', length: 500),
             ],
           ));
           break;

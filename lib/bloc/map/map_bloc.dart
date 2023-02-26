@@ -48,31 +48,11 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       markers: state.markers,
       circles: state.circles,
     ));
-    //_initMarkers();
   }
 
   void updateCameraPosition(CameraPosition position) {
-    if (state.markers.isEmpty) {
-      controller.animateCamera(CameraUpdate.newCameraPosition(
-          CameraPosition(target: position.target, zoom: position.zoom)));
-    } else {
-      LatLngBounds bounds;
-      try {
-        bounds = LatLngBounds(
-          southwest: state.markers.last.position,
-          northeast: state.markers.first.position,
-        );
-      } catch (e) {
-        bounds = LatLngBounds(
-          southwest: state.markers.first.position,
-          northeast: state.markers.last.position,
-        );
-      }
-      controller.animateCamera(CameraUpdate.newLatLngBounds(
-        bounds,
-        100,
-      ));
-    }
+    controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: position.target, zoom: position.zoom)));
   }
 
   void _listenToLocationChanges(Emitter<MapState> emit) {
@@ -80,8 +60,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         .locationStreamController
         .stream
         .listen((event) {
-      // updateCameraPosition(CameraPosition(
-      //     target: LatLng(event.latitude, event.longitude), zoom: 10));
+      updateCameraPosition(CameraPosition(
+          target: LatLng(event.latitude, event.longitude), zoom: 10));
     });
   }
 

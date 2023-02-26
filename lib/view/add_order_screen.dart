@@ -36,7 +36,7 @@ class AddOrderScreen extends HookWidget {
               orderRepository: context.read<OrderRepositoryImpl>()),
           child: BlocConsumer<AddOrderBloc, AddOrderState>(
             listener: (context, state) {
-              if(state is OrderAdded) {
+              if (state is OrderAdded) {
                 nameController.clear();
                 addressController.clear();
                 priceController.clear();
@@ -110,29 +110,27 @@ class AddOrderScreen extends HookWidget {
                               context
                                   .read<AddOrderBloc>()
                                   .add(AddOrderToDatabaseEvent(
-                                name: nameController.text,
-                                address: addressController.text,
-                                price: priceController.text,
-                                pickup: pickup,
-                                delivery: delivery,
-                              ));
+                                    name: nameController.text,
+                                    address: addressController.text,
+                                    price: priceController.text,
+                                    pickup: pickup,
+                                    delivery: delivery,
+                                  ));
                             },
                             icon: Icons.add_circle,
-
                           ),
                         ],
                       ),
                     )
                   : Center(
-                    child: Column(
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryColor,
-                                minimumSize: const Size(150, 40)
-                              ),
+                                  backgroundColor: primaryColor,
+                                  minimumSize: const Size(150, 40)),
                               onPressed: () {
                                 context
                                     .read<AddOrderBloc>()
@@ -144,12 +142,13 @@ class AddOrderScreen extends HookWidget {
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold),
                               )),
-                          const SizedBox(height: 20,),
+                          const SizedBox(
+                            height: 20,
+                          ),
                           ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryColor,
-                                minimumSize: const Size(150, 40)
-                              ),
+                                  backgroundColor: primaryColor,
+                                  minimumSize: const Size(150, 40)),
                               onPressed: () {
                                 context.pop();
                               },
@@ -160,8 +159,8 @@ class AddOrderScreen extends HookWidget {
                                     fontWeight: FontWeight.bold),
                               ))
                         ],
-              ),
-                  );
+                      ),
+                    );
             },
           ),
         ),

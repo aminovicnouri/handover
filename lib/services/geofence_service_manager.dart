@@ -3,12 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geofence_service/geofence_service.dart';
 import 'package:rxdart/rxdart.dart';
-import 'dart:math' as math;
 
-import '../model/order.dart';
 import '../notifications/local_notification_service.dart';
 
-class GeofenceServiceManager  {
+class GeofenceServiceManager {
   GeofenceServiceManager._sharedInstance();
 
   static final GeofenceServiceManager _shared =
@@ -16,11 +14,9 @@ class GeofenceServiceManager  {
 
   factory GeofenceServiceManager.instance() => _shared;
 
-  StreamController<Geofence> controller = BehaviorSubject();
+  StreamController<Geofence> geofenceStreamController = BehaviorSubject();
 
   final _activityStreamController = StreamController<Activity>();
-
- // final geofenceStreamController = StreamController<Geofence>();
 
   final locationStreamController = StreamController<Location>();
 
@@ -43,16 +39,37 @@ class GeofenceServiceManager  {
       GeofenceRadius geofenceRadius,
       GeofenceStatus geofenceStatus,
       Location location) async {
-    LocalNotificationService.showNotificationWithPayload(id: math.Random().nextInt(100), title: geofence.id, body: geofence.status.name, payload: "");
-    print('geofence: ${geofence.toJson()}');
-    print('geofenceRadius: ${geofenceRadius.toJson()}');
-    print('geofenceStatus: ${geofenceStatus.toString()}');
-    controller.sink.add(geofence);
+    GeofenceStatus radius500notified = GeofenceStatus.EXIT;
+    GeofenceStatus radius5000notified = GeofenceStatus.EXIT;
+    final isPickup = geofence.id.contains('origin');
+
+    if (geofence.radius.first.status != radius5000notified) {
+      if (geofence.radius.first.status == GeofenceStatus.ENTER) {
+        LocalNotificationService.showNotificationWithPayload(
+            id: 0,
+            title: isPickup ? 'Pick up' : 'Delivery',
+            body: "5 km to the arrive",
+            payload: "");
+      }
+      radius5000notified = geofence.radius.first.status;
+    }
+
+    if (geofence.radius.last.status != radius500notified) {
+      if (geofence.radius.last.status == GeofenceStatus.ENTER) {
+        LocalNotificationService.showNotificationWithPayload(
+            id: 0,
+            title: isPickup ? 'Pick up' : 'Delivery',
+            body: "500 m to the arrive",
+            payload: "");
+      }
+      radius5000notified = geofence.radius.last.status;
+    }
+    geofenceStreamController.sink.add(geofence);
   }
 
   void updateGeofences(List<Geofence> geofences) {
     _geofenceService.clearGeofenceList();
-    if(geofences.isNotEmpty) {
+    if (geofences.isNotEmpty) {
       operationGeofence = geofences.first;
       _geofenceService.addGeofenceList(geofences);
     }
@@ -60,32 +77,24 @@ class GeofenceServiceManager  {
 
   // This function is to be called when the activity has changed.
   void _onActivityChanged(Activity prevActivity, Activity currActivity) {
-    print('prevActivity: ${prevActivity.toJson()}');
-    print('currActivity: ${currActivity.toJson()}');
     _activityStreamController.sink.add(currActivity);
   }
 
   // This function is to be called when the location has changed.
   void _onLocationChanged(Location location) {
-    print('location: ${location.toJson()}');
     locationStreamController.sink.add(location);
   }
 
   // This function is to be called when a location services status change occurs
   // since the service was started.
-  void _onLocationServicesStatusChanged(bool status) {
-    print('isLocationServicesEnabled: $status');
-  }
+  void _onLocationServicesStatusChanged(bool status) {}
 
   // This function is used to handle errors that occur in the service.
   void _onError(error) {
     final errorCode = getErrorCodesFromError(error);
     if (errorCode == null) {
-      print('Undefined error: $error');
       return;
     }
-
-    print('ErrorCode: $errorCode');
   }
 
   void start() async {

@@ -24,7 +24,8 @@ Future<void> main() async {
             primarySwatch: Colors.blue,
           ),
           routerConfig: _router,
-        );  },
+        );
+      },
     ),
   );
 }
@@ -48,6 +49,3 @@ final GoRouter _router = GoRouter(
     ),
   ],
 );
-
-
-

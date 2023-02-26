@@ -40,10 +40,12 @@ class BottomSheetBloc extends Bloc<BottomSheetEvent, BottomSheetState> {
       if (event.canBePickedOrDelivered) {
         if (state.currentOrder!.status == OrderStatus.runningForPickUp) {
           order.status = OrderStatus.picked;
-          order.pickUpTime = DateTime.now().microsecondsSinceEpoch / 1000;
+          order.pickUpTime =
+              DateTime.now().toLocal().microsecondsSinceEpoch / 1000;
         } else {
           order.status = OrderStatus.delivered;
-          order.deliveryTime = DateTime.now().microsecondsSinceEpoch / 1000;
+          order.deliveryTime =
+              DateTime.now().toLocal().microsecondsSinceEpoch / 1000;
         }
       }
       event.updateOrder!(order);
@@ -58,7 +60,6 @@ class BottomSheetBloc extends Bloc<BottomSheetEvent, BottomSheetState> {
     on<SubmitOrderEvent>((event, emit) async {
       Order order = event.order;
       order.status = OrderStatus.submitted;
-      print("hhhhhhhh ${order.status}");
       await _orderRepository.updateOrder(order);
       final orders = await _orderRepository.getOrders();
       event.clear();
