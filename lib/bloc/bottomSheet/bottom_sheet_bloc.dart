@@ -21,7 +21,6 @@ class BottomSheetBloc extends Bloc<BottomSheetEvent, BottomSheetState> {
       final running = list.where((element) =>
           element.status != OrderStatus.idle &&
           element.status != OrderStatus.submitted);
-      print("hhhhhhhhh $running");
       if (running.isEmpty) {
         emit(BottomSheetState(
             allOrders: list,
@@ -58,8 +57,8 @@ class BottomSheetBloc extends Bloc<BottomSheetEvent, BottomSheetState> {
 
     on<SubmitOrderEvent>((event, emit) async {
       Order order = event.order;
-      order.status == OrderStatus.submitted;
-      await _orderRepository.updateOrder(order);
+      order.status = OrderStatus.submitted;
+      print("hhhhhhhh ${order.status}");
       await _orderRepository.updateOrder(order);
       final orders = await _orderRepository.getOrders();
       event.clear();

@@ -5,6 +5,7 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:go_router/go_router.dart';
 import 'package:handover/bloc/add_order/add_order_bloc.dart';
 import 'package:handover/repositories/order_repository_Impl.dart';
+import 'package:handover/view/my_button.dart';
 import 'package:handover/view/text_field.dart';
 
 import '../utils/constants.dart';
@@ -103,27 +104,22 @@ class AddOrderScreen extends HookWidget {
                           const SizedBox(
                             height: 20,
                           ),
-                          ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryColor,
-                              ),
-                              onPressed: () {
-                                context
-                                    .read<AddOrderBloc>()
-                                    .add(AddOrderToDatabaseEvent(
-                                      name: nameController.text,
-                                      address: addressController.text,
-                                      price: priceController.text,
-                                      pickup: pickup,
-                                      delivery: delivery,
-                                    ));
-                              },
-                              child: const Text(
-                                'Add Order',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ))
+                          MyButton(
+                            text: 'Add Order',
+                            onTap: () {
+                              context
+                                  .read<AddOrderBloc>()
+                                  .add(AddOrderToDatabaseEvent(
+                                name: nameController.text,
+                                address: addressController.text,
+                                price: priceController.text,
+                                pickup: pickup,
+                                delivery: delivery,
+                              ));
+                            },
+                            icon: Icons.add_circle,
+
+                          ),
                         ],
                       ),
                     )

@@ -18,22 +18,15 @@ class MapScreen extends StatelessWidget {
       body: BlocBuilder<MapBloc, MapState>(
         bloc: mapBloc,
         builder: (context, state) {
-          return Column(
-            children: [
-              Text("markers ${state.markers.length}"),
-              Expanded(child: GoogleMap(
-                onMapCreated: (controller) {
-                  mapBloc.add(InitControllerEvent(controller: controller));
-                },
-                markers: state.markers,
-                circles: state.circles,
-
-                // onCameraMove: (position) =>
-                //     context.read<AppBloc>().updateMarkers(position.zoom),
-                initialCameraPosition: state.position,
-                myLocationEnabled: true,
-              ))
-            ],
+          return GoogleMap(
+            onMapCreated: (controller) {
+              mapBloc.add(InitControllerEvent(controller: controller));
+            },
+            markers: state.markers,
+            circles: state.circles,
+            initialCameraPosition: state.position,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
           );
         },
       ),

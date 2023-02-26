@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:handover/model/order.dart';
@@ -21,7 +22,6 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       if (event.order != null) {
         addMarkers(emit, event.order!);
       } else {
-        print("hhhhhhhhhhh");
         emit(
           MapState(
               controller: state.controller,
@@ -40,7 +40,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   void initMapController(
       Emitter<MapState> emit, GoogleMapController controller) {
     this.controller = controller;
-
+    _updateMapStyle();
     _listenToLocationChanges(emit);
     emit(MapState(
       controller: this.controller,
@@ -80,8 +80,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         .locationStreamController
         .stream
         .listen((event) {
-      updateCameraPosition(CameraPosition(
-          target: LatLng(event.latitude, event.longitude), zoom: 10));
+      // updateCameraPosition(CameraPosition(
+      //     target: LatLng(event.latitude, event.longitude), zoom: 10));
     });
   }
 
@@ -143,5 +143,10 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       markers: markers,
       circles: {origin_100m, origin_1km, destination_100m, destination_1km},
     ));
+  }
+
+  Future<void> _updateMapStyle() async {
+    String style = await rootBundle.loadString("assets/map_style.json");
+    controller.setMapStyle(style);
   }
 }
