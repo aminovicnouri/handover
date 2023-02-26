@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:handover/bloc/bottomSheet/bottom_sheet_bloc.dart';
 import 'package:handover/model/order.dart';
+import 'package:handover/utils/constants.dart';
+import 'package:intl/intl.dart';
 import 'package:timelines/timelines.dart';
 
 class OrdersBottomSheet extends StatelessWidget {
@@ -9,36 +12,39 @@ class OrdersBottomSheet extends StatelessWidget {
     required this.bottomSheetBloc,
     required this.selectOrder,
     required this.updateOrder,
+    required this.clearSelection,
     Key? key,
   }) : super(key: key);
 
   final Function(Order order) selectOrder;
   final Function(Order order) updateOrder;
+  final Function() clearSelection;
   final BottomSheetBloc bottomSheetBloc;
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<BottomSheetBloc, BottomSheetState>(
+    return BlocConsumer<BottomSheetBloc, BottomSheetState>(
       bloc: bottomSheetBloc..add(Initialize(select: selectOrder)),
+      listener: (context, state) {},
       builder: (context, appState) {
         return SizedBox(
-          height: appState is BottomSheetListState ? 600 : 500,
+          height: appState.currentOrder == null ? 600 : 500,
           child: Stack(
             children: [
               Container(
-                alignment: appState is BottomSheetListState
+                alignment: appState.currentOrder == null
                     ? Alignment.center
                     : Alignment.centerLeft,
                 height: 600,
                 width: double.infinity,
                 margin: const EdgeInsets.only(top: 60),
                 decoration: const BoxDecoration(
-                    color: Colors.orangeAccent,
+                    color: primaryColor,
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(30),
                       topRight: Radius.circular(30),
                     )),
-                child: appState is BottomSheetListState
+                child: appState.currentOrder == null
                     ? Column(
                         children: [
                           const SizedBox(
@@ -89,7 +95,7 @@ class OrdersBottomSheet extends StatelessWidget {
                                       ),
                                       ElevatedButton(
                                         onPressed: () {},
-                                        child: Text("check"),
+                                        child: const Text("check"),
                                       )
                                     ],
                                   ),
@@ -98,67 +104,196 @@ class OrdersBottomSheet extends StatelessWidget {
                             ),
                           ),
                           ElevatedButton(
-                            onPressed: () {
-                              bottomSheetBloc.add(
-                                AddOrder(
-                                    order: Order(
-                                        id: 5,
-                                        name: "order test",
-                                        address: "dfdfdf",
-                                        status: OrderStatus.idle,
-                                        pickupLatitude: 25.089799,
-                                        pickupLongitude: 55.158681,
-                                        deliveryLatitude: 25.227552,
-                                        deliveryLongitude: 55.318706,
-                                        rating: 4,
-                                        price: 55)),
-                              );
-                            },
+                            onPressed: () {},
                             child: const Text(
                               "Add order",
                             ),
                           )
                         ],
                       )
-                    : Container(
-                        margin: const EdgeInsets.symmetric(
-                          vertical: 50,
-                          horizontal: 10,
-                        ),
-                        child: Stack(
-                          children: [
-                            _Timeline(
-                              order: (appState as BottomSheetOrderSelectedState)
-                                  .currentOrder,
+                    : appState.currentOrder!.status != OrderStatus.delivered
+                        ? Container(
+                            margin: const EdgeInsets.only(
+                              top: 100,
+                              left: 10,
+                              right: 10,
                             ),
-                            Align(
-                              alignment: Alignment.bottomCenter,
-                              child:   appState.canBePickedOrDelivered
-                                  ? ElevatedButton(
-                                  onPressed: () {
-                                    bottomSheetBloc.add(UpdateOrderEvent(
-                                      order: appState.currentOrder,
-                                      canBePickedOrDelivered: true,
-                                      updateOrder: updateOrder,
-                                    ));
+                            child: Stack(
+                              children: [
+                                _Timeline(
+                                  order: appState.currentOrder!,
+                                ),
+                                Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: appState.canBePickedOrDelivered
+                                      ? ElevatedButton(
+                                          onPressed: () {
+                                            bottomSheetBloc
+                                                .add(UpdateOrderEvent(
+                                              order: appState.currentOrder!,
+                                              canBePickedOrDelivered: true,
+                                              updateOrder: updateOrder,
+                                            ));
+                                          },
+                                          child: Text(
+                                            appState.currentOrder!.status ==
+                                                    OrderStatus.runningForPickUp
+                                                ? "Confirm pick up"
+                                                : "Confirm delivery",
+                                          ))
+                                      : const SizedBox(),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Container(
+                            margin: const EdgeInsets.only(top: 100),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                RatingBar.builder(
+                                  initialRating: 1,
+                                  minRating: 1,
+                                  direction: Axis.horizontal,
+                                  allowHalfRating: true,
+                                  itemCount: 5,
+                                  itemPadding: const EdgeInsets.symmetric(
+                                      horizontal: 4.0),
+                                  itemBuilder: (context, _) => const Icon(
+                                    Icons.star,
+                                    color: Colors.white,
+                                  ),
+                                  onRatingUpdate: (rating) {
+                                    bottomSheetBloc.add(
+                                        UpdateOrderRatingEvent(rating: rating));
                                   },
-                                  child: Text(
-                                    appState.currentOrder.status ==
-                                        OrderStatus.runningForPickUp
-                                        ? "Confirm pick up"
-                                        : "Confirm delivery",
-                                  ))
-                                  : const SizedBox(),
+                                ),
+                                Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        const Text(
+                                          "Pickup time: ",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        Text(
+                                          DateFormat('hh:mm a').format(
+                                            DateTime.fromMillisecondsSinceEpoch(
+                                                (appState.currentOrder!
+                                                    .pickUpTime! *
+                                                    1000)
+                                                    .toInt()),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        const Text(
+                                          "Deliver time: ",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        Text(
+                                          DateFormat('hh:mm a').format(
+                                            DateTime.fromMillisecondsSinceEpoch(
+                                                (appState.currentOrder!
+                                                    .deliveryTime! *
+                                                    1000)
+                                                    .toInt()),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Center(
+                                        child: Column(
+                                          children: [
+                                            const Text(
+                                              "Total",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            const SizedBox(
+                                              height: 10,
+                                            ),
+                                            Text(
+                                              '\$ ${appState.currentOrder!.price}',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Flexible(
+                                        child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          bottomSheetBloc.add(SubmitOrderEvent(order: appState.currentOrder!, clear: clearSelection));
+                                        },
+                                        child: Container(
+                                          width: 120,
+                                          height: 40,
+                                          decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.only(
+                                                topLeft: Radius.circular(20),
+                                                bottomLeft: Radius.circular(20),
+                                              ),),
+                                          child: Center(
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                              children: const [
+                                                 Text(
+                                                  "Submit",
+                                                  style: TextStyle(
+                                                      fontWeight: FontWeight.bold),
+                                                ),
+                                                Icon(Icons.arrow_forward_rounded, size: 18,)
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ))
+                                  ],
+                                )
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
               ),
-              const Align(
+              Align(
                 alignment: Alignment.topCenter,
-                child: CircleAvatar(
-                  radius: 70,
-                  backgroundColor: Colors.red,
+                child: Column(
+                  children: [
+                    const CircleAvatar(
+                      radius: 70,
+                      backgroundColor: Colors.red,
+                    ),
+                    const SizedBox(height: 20,),
+                    appState.currentOrder != null ? Text(
+                      appState.currentOrder!.name,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        fontSize: 20
+                      ),
+                    ) : const SizedBox(),
+                  ],
                 ),
               ),
             ],

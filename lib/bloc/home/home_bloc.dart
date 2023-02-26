@@ -24,21 +24,28 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     on<CheckPermissions>((event, emit) async {
       final status = await checkPermissions();
-      emit(
-        state.copyWith(permissionState: status)
-      );
+      emit(state.copyWith(permissionState: status));
     });
 
     on<SelectOrder>((event, emit) async {
-      final order = event.order;
-      if (order.status == OrderStatus.idle) {
-        order.status = OrderStatus.runningForPickUp;
-        await _orderRepository.updateOrder(order);
+      if (event.order != null) {
+        if (event.order!.status == OrderStatus.idle) {
+          event.order!.status = OrderStatus.runningForPickUp;
+          await _orderRepository.updateOrder(event.order!);
+        }
+        emit(state.copyWith(currentOrder: event.order));
+        _syncWithService();
+      } else {
+        final orders = await _orderRepository.getOrders();
+        emit(
+          HomeState(
+              currentOrder: null,
+              allOrders: orders,
+              serviceIsRunning: state.serviceIsRunning,
+              showBottomSheet: state.showBottomSheet,
+              canBePickedOrDelivered: false),
+        );
       }
-      emit(
-        state.copyWith(currentOrder: order)
-      );
-      _syncWithService();
     });
 
     on<ChangeOrderStatus>((event, emit) async {
@@ -47,10 +54,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       if (event.status != OrderStatus.nearDestination) {
         await _orderRepository.updateOrder(order);
       }
-      emit(
-        state.copyWith(currentOrder: order, canBePickedOrDelivered: false)
-      );
-      _syncWithService();
+      emit(state.copyWith(currentOrder: order, canBePickedOrDelivered: false));
+      if (state.currentOrder?.status == OrderStatus.outForDelivery &&
+          (GeofenceServiceManager.instance().operationGeofence?.id ?? "")
+              .contains("origin")) {
+        _syncWithService();
+      }
     });
 
     on<AskForStatusChange>((event, emit) async {
@@ -63,7 +72,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       await _orderRepository.insertOrder(event.order);
       final list = await _orderRepository.getOrders();
       emit(
-          state.copyWith(allOrders: list),
+        state.copyWith(allOrders: list),
       );
     });
     on<InitialState>((event, emit) async {
@@ -71,18 +80,17 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final list = await _orderRepository.getOrders();
       final running = list.where((element) =>
           element.status != OrderStatus.idle &&
-          element.status != OrderStatus.delivered);
+          element.status != OrderStatus.submitted);
       final current = running.isEmpty ? null : running.first;
       emit(
         state.copyWith(allOrders: list, currentOrder: current),
       );
+      GeofenceServiceManager.instance().start();
       _syncWithService();
       _listenToLocationChanges();
     });
     on<ShowBottomSheetEvent>((event, emit) async {
-      emit(
-          state.copyWith(showBottomSheet: event.show)
-      );
+      emit(state.copyWith(showBottomSheet: event.show));
     });
 
     on<RequestPermissions>((event, emit) async {
@@ -99,11 +107,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   void _listenToLocationChanges() {
     _geofenceSubscription?.cancel();
-    _geofenceSubscription = GeofenceServiceManager.instance()
-        .controller
-        .stream
-        .listen((geofence) {
-      add(const ShowBottomSheetEvent(show: true));
+    _geofenceSubscription =
+        GeofenceServiceManager.instance().controller.stream.listen((geofence) {
       _handleGeofence(geofence);
     });
   }
@@ -183,9 +188,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           break;
       }
     }
-    GeofenceServiceManager.instance().start(geofenceList);
-    _listenToLocationChanges();
+    GeofenceServiceManager.instance().updateGeofences(geofenceList);
   }
 }
-
-

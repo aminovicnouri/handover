@@ -8,7 +8,7 @@ import '../bloc/map/map_bloc.dart';
 class MapScreen extends StatelessWidget {
 
 
-  MapScreen({super.key,required this.mapBloc});
+  const MapScreen({super.key,required this.mapBloc});
 
   final MapBloc mapBloc;
 
@@ -27,6 +27,7 @@ class MapScreen extends StatelessWidget {
                 },
                 markers: state.markers,
                 circles: state.circles,
+
                 // onCameraMove: (position) =>
                 //     context.read<AppBloc>().updateMarkers(position.zoom),
                 initialCameraPosition: state.position,

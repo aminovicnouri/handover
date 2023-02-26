@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geofence_service/geofence_service.dart';
 import 'package:rxdart/rxdart.dart';
+import 'dart:math' as math;
 
 import '../model/order.dart';
 import '../notifications/local_notification_service.dart';
 
-class GeofenceServiceManager {
+class GeofenceServiceManager  {
   GeofenceServiceManager._sharedInstance();
 
   static final GeofenceServiceManager _shared =
@@ -22,6 +23,8 @@ class GeofenceServiceManager {
  // final geofenceStreamController = StreamController<Geofence>();
 
   final locationStreamController = StreamController<Location>();
+
+  Geofence? operationGeofence;
 
   // Create a [GeofenceService] instance and set options.
   final _geofenceService = GeofenceService.instance.setup(
@@ -40,11 +43,19 @@ class GeofenceServiceManager {
       GeofenceRadius geofenceRadius,
       GeofenceStatus geofenceStatus,
       Location location) async {
-    LocalNotificationService.showNotificationWithPayload(id: 111, title: geofence.id, body: geofence.status.name, payload: "");
+    LocalNotificationService.showNotificationWithPayload(id: math.Random().nextInt(100), title: geofence.id, body: geofence.status.name, payload: "");
     print('geofence: ${geofence.toJson()}');
     print('geofenceRadius: ${geofenceRadius.toJson()}');
     print('geofenceStatus: ${geofenceStatus.toString()}');
     controller.sink.add(geofence);
+  }
+
+  void updateGeofences(List<Geofence> geofences) {
+    _geofenceService.clearGeofenceList();
+    if(geofences.isNotEmpty) {
+      operationGeofence = geofences.first;
+      _geofenceService.addGeofenceList(geofences);
+    }
   }
 
   // This function is to be called when the activity has changed.
@@ -77,7 +88,7 @@ class GeofenceServiceManager {
     print('ErrorCode: $errorCode');
   }
 
-  void start(List<Geofence> geofenceList) async {
+  void start() async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _geofenceService
           .addGeofenceStatusChangeListener(_onGeofenceStatusChanged);
@@ -86,7 +97,7 @@ class GeofenceServiceManager {
           _onLocationServicesStatusChanged);
       _geofenceService.addActivityChangeListener(_onActivityChanged);
       _geofenceService.addStreamErrorListener(_onError);
-      _geofenceService.start(geofenceList).catchError(_onError);
+      _geofenceService.start().catchError(_onError);
     });
   }
 

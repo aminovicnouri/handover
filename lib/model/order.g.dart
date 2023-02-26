@@ -25,15 +25,17 @@ class OrderAdapter extends TypeAdapter<Order> {
       pickupLongitude: fields[5] as double,
       deliveryLatitude: fields[6] as double,
       deliveryLongitude: fields[7] as double,
-      rating: fields[8] as int?,
+      rating: fields[8] as double,
       price: fields[9] as double?,
+      pickUpTime: fields[10] as double?,
+      deliveryTime: fields[11] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Order obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +55,11 @@ class OrderAdapter extends TypeAdapter<Order> {
       ..writeByte(8)
       ..write(obj.rating)
       ..writeByte(9)
-      ..write(obj.price);
+      ..write(obj.price)
+      ..writeByte(10)
+      ..write(obj.pickUpTime)
+      ..writeByte(11)
+      ..write(obj.deliveryTime);
   }
 
   @override
@@ -86,6 +92,8 @@ class OrderStatusAdapter extends TypeAdapter<OrderStatus> {
         return OrderStatus.nearDestination;
       case 5:
         return OrderStatus.delivered;
+      case 6:
+        return OrderStatus.submitted;
       default:
         return OrderStatus.idle;
     }
@@ -111,6 +119,9 @@ class OrderStatusAdapter extends TypeAdapter<OrderStatus> {
         break;
       case OrderStatus.delivered:
         writer.writeByte(5);
+        break;
+      case OrderStatus.submitted:
+        writer.writeByte(6);
         break;
     }
   }

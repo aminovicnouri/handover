@@ -1,10 +1,9 @@
 import 'dart:async';
 
-import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:handover/model/order.dart';
-import 'package:meta/meta.dart';
 
 import '../../services/geofence_service_manager.dart';
 
@@ -21,6 +20,15 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     on<AddMarkersEvent>((event, emit) {
       if (event.order != null) {
         addMarkers(emit, event.order!);
+      } else {
+        print("hhhhhhhhhhh");
+        emit(
+          MapState(
+              controller: state.controller,
+              position: state.position,
+              markers: const {},
+              circles: const {}),
+        );
       }
     });
   }
@@ -35,17 +43,36 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
     _listenToLocationChanges(emit);
     emit(MapState(
-        controller: this.controller,
-        position: state.position,
-        markers: state.markers,
-        circles: state.circles,
+      controller: this.controller,
+      position: state.position,
+      markers: state.markers,
+      circles: state.circles,
     ));
     //_initMarkers();
   }
 
   void updateCameraPosition(CameraPosition position) {
-    controller.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: position.target, zoom: position.zoom)));
+    if (state.markers.isEmpty) {
+      controller.animateCamera(CameraUpdate.newCameraPosition(
+          CameraPosition(target: position.target, zoom: position.zoom)));
+    } else {
+      LatLngBounds bounds;
+      try {
+        bounds = LatLngBounds(
+          southwest: state.markers.last.position,
+          northeast: state.markers.first.position,
+        );
+      } catch (e) {
+        bounds = LatLngBounds(
+          southwest: state.markers.first.position,
+          northeast: state.markers.last.position,
+        );
+      }
+      controller.animateCamera(CameraUpdate.newLatLngBounds(
+        bounds,
+        100,
+      ));
+    }
   }
 
   void _listenToLocationChanges(Emitter<MapState> emit) {
@@ -54,7 +81,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         .stream
         .listen((event) {
       updateCameraPosition(CameraPosition(
-          target: LatLng(event.latitude, event.longitude), zoom: 15));
+          target: LatLng(event.latitude, event.longitude), zoom: 10));
     });
   }
 

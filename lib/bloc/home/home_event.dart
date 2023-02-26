@@ -44,7 +44,7 @@ class RequestPermissions implements HomeEvent {
 
 @immutable
 class SelectOrder implements HomeEvent {
-  final Order order;
+  final Order? order;
 
   const SelectOrder({required this.order});
 }

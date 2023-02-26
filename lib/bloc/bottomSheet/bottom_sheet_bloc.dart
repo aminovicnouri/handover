@@ -1,5 +1,5 @@
-
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:handover/model/order.dart';
 
@@ -14,54 +14,77 @@ class BottomSheetBloc extends Bloc<BottomSheetEvent, BottomSheetState> {
 
   BottomSheetBloc({required OrderRepository orderRepository})
       : _orderRepository = orderRepository,
-        super(const BottomSheetListState(allOrders: [])) {
-
+        super(BottomSheetState.empty()) {
     on<Initialize>((event, emit) async {
       await _orderRepository.init();
       final list = await _orderRepository.getOrders();
-      final running =
-          list.where((element) =>  element.status != OrderStatus.idle && element.status != OrderStatus.delivered);
+      final running = list.where((element) =>
+          element.status != OrderStatus.idle &&
+          element.status != OrderStatus.submitted);
+      print("hhhhhhhhh $running");
       if (running.isEmpty) {
-        emit(BottomSheetListState(allOrders: list));
+        emit(BottomSheetState(
+            allOrders: list,
+            currentOrder: null,
+            canBePickedOrDelivered: false));
       } else {
         event.select(running.first);
-        emit(BottomSheetOrderSelectedState(currentOrder: running.first));
+        emit(BottomSheetState(
+            allOrders: list,
+            currentOrder: running.first,
+            canBePickedOrDelivered: false));
       }
-    });
-
-    on<AddOrder>((event, emit) async {
-      await _orderRepository.insertOrder(event.order);
-      final list = await _orderRepository.getOrders();
-      emit(BottomSheetListState(allOrders: list));
     });
 
     on<UpdateOrderEvent>((event, emit) async {
-      final order = event.order;
-      if(event.canBePickedOrDelivered) {
-        if ((state as BottomSheetOrderSelectedState).currentOrder.status ==
-            OrderStatus.runningForPickUp) {
+      Order order = event.order;
+      if (event.canBePickedOrDelivered) {
+        if (state.currentOrder!.status == OrderStatus.runningForPickUp) {
           order.status = OrderStatus.picked;
+          order.pickUpTime = DateTime.now().microsecondsSinceEpoch / 1000;
         } else {
           order.status = OrderStatus.delivered;
+          order.deliveryTime = DateTime.now().microsecondsSinceEpoch / 1000;
         }
       }
-      emit(BottomSheetOrderSelectedState(currentOrder: order, canBePickedOrDelivered: false));
-      if(event.updateOrder != null) {
-        event.updateOrder!(order);
-      }
+      event.updateOrder!(order);
+      emit(state.copyWith(currentOrder: order));
+    });
+
+    on<UpdateOrderStatusEvent>((event, emit) {
+      emit(state.copyWith(
+          canBePickedOrDelivered: false, currentOrder: event.order));
+    });
+
+    on<SubmitOrderEvent>((event, emit) async {
+      Order order = event.order;
+      order.status == OrderStatus.submitted;
+      await _orderRepository.updateOrder(order);
+      await _orderRepository.updateOrder(order);
+      final orders = await _orderRepository.getOrders();
+      event.clear();
+      emit(
+        BottomSheetState(
+          allOrders: orders,
+          currentOrder: null,
+          canBePickedOrDelivered: false,
+        ),
+      );
+    });
+
+    on<UpdateOrderRatingEvent>((event, emit) {
+      final order = state.currentOrder;
+      order!.rating = event.rating;
+      emit(state.copyWith(currentOrder: order));
     });
 
     on<SelectOrderBottomSheetEvent>((event, emit) async {
       event.select(event.order);
-      emit(BottomSheetOrderSelectedState(
-        currentOrder: event.order,
-      ));
+      emit(state.copyWith(currentOrder: event.order));
     });
 
     on<AskForUpdateEvent>((event, emit) async {
-      final currentState = state as BottomSheetOrderSelectedState;
-      emit(BottomSheetOrderSelectedState(
-        currentOrder: currentState.currentOrder,
+      emit(state.copyWith(
         canBePickedOrDelivered: event.canBePickedOrDelivered,
       ));
     });

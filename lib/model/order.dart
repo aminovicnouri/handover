@@ -18,6 +18,8 @@ class Order extends HiveObject {
     required this.deliveryLongitude,
     required this.rating,
     required this.price,
+    required this.pickUpTime,
+    required this.deliveryTime
   });
   
   @HiveField(0)
@@ -46,10 +48,16 @@ class Order extends HiveObject {
   final double deliveryLongitude;
 
   @HiveField(8)
-  final int? rating;
+  double rating = 0;
 
   @HiveField(9)
   final double? price;
+
+  @HiveField(10)
+  double? pickUpTime;
+
+  @HiveField(11)
+  double? deliveryTime;
 
   List<LatLng> getLatLngs() {
     return [LatLng(pickupLatitude, pickupLongitude), LatLng(deliveryLatitude, deliveryLongitude)];
@@ -76,7 +84,10 @@ enum OrderStatus {
   nearDestination("Near delivery destination"),
 
   @HiveField(5)
-  delivered("delivered");
+  delivered("delivered"),
+
+  @HiveField(6)
+  submitted("submitted");
 
   const OrderStatus(this.value);
 
